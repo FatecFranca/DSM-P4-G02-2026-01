@@ -10,4 +10,7 @@ routes.post('/vitals', SinalVitalController.store);
 // Rota para a ONG/Mãe ver os dados
 routes.get('/vitals', SinalVitalController.index);
 
+// Rota para buscar por um ID específico
+routes.get('/vitals/:babyId', SinalVitalController.show);
+
 module.exports = routes;
