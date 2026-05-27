@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeoVínculo - Dashboard ONG</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body class="bg-slate-50 font-sans">
+
+    <nav class="bg-white shadow-sm border-b border-slate-200 p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-sky-600"><i class="fa-solid fa-baby mr-2"></i>NeoVínculo</h1>
+            <span class="text-slate-500 text-sm">Monitoramento em Tempo Real</span>
+        </div>
+    </nav>
+
+    <main class="container mx-auto p-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-slate-500 font-medium">Última Temperatura</p>
+                        <h2 id="current-temp" class="text-4xl font-bold text-slate-800 mt-2">--°C</h2>
+                    </div>
+                    <div class="bg-orange-100 p-3 rounded-xl text-orange-600">
+                        <i class="fa-solid fa-temperature-half text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-slate-500 font-medium">Últimos Batimentos</p>
+                        <h2 id="current-bpm" class="text-4xl font-bold text-slate-800 mt-2">-- BPM</h2>
+                    </div>
+                    <div class="bg-rose-100 p-3 rounded-xl text-rose-600">
+                        <i class="fa-solid fa-heart-pulse text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div id="status-card" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-slate-500 font-medium">Status do Bebê</p>
+                        <h2 id="current-status" class="text-2xl font-bold text-slate-800 mt-2 italic">Aguardando...</h2>
+                    </div>
+                    <div id="status-icon" class="bg-slate-100 p-3 rounded-xl text-slate-600">
+                        <i class="fa-solid fa-circle-check text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-slate-800">Histórico de Coleta</h3>
+                <button onclick="buscarDados()" class="text-sky-600 hover:text-sky-700 text-sm font-medium">
+                    <i class="fa-solid fa-rotate mr-1"></i> Atualizar
+                </button>
+            </div>
+            <table class="w-full text-left">
+                <thead class="bg-slate-50 text-slate-500 uppercase text-xs">
+                    <tr>
+                        <th class="px-6 py-4">Data/Hora</th>
+                        <th class="px-6 py-4">Bebê ID</th>
+                        <th class="px-6 py-4">Temperatura</th>
+                        <th class="px-6 py-4">Batimentos</th>
+                    </tr>
+                </thead>
+                <tbody id="logs-table" class="divide-y divide-slate-100">
+                    </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script>
+        async function buscarDados() {
+            try {
+                const response = await fetch('http://localhost:3000/vitals');
+                const dados = await response.json();
+
+                if (dados.length > 0) {
+                    const ultimo = dados[0]; // Pega o mais recente
+                    
+                    // Atualiza os Cards
+                    document.getElementById('current-temp').innerText = `${ultimo.temperatura}°C`;
+                    document.getElementById('current-bpm').innerText = `${ultimo.batimentos} BPM`;
+
+                    // Lógica de Status
+                    const statusCard = document.getElementById('status-card');
+                    const statusText = document.getElementById('current-status');
+                    
+                    if (ultimo.temperatura > 37.5) {
+                        statusText.innerText = "Febre Detectada!";
+                        statusCard.className = "bg-red-50 p-6 rounded-2xl shadow-sm border border-red-200";
+                    } else {
+                        statusText.innerText = "Sinais Estáveis";
+                        statusCard.className = "bg-green-50 p-6 rounded-2xl shadow-sm border border-green-200";
+                    }
+
+                    // Atualiza a Tabela
+                    const tabela = document.getElementById('logs-table');
+                    tabela.innerHTML = ''; // Limpa a tabela
+
+                    dados.forEach(log => {
+                        const data = new Date(log.dataHora).toLocaleString('pt-BR');
+                        tabela.innerHTML += `
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="px-6 py-4">${data}</td>
+                                <td class="px-6 py-4 font-medium">${log.babyId}</td>
+                                <td class="px-6 py-4">${log.temperatura}°C</td>
+                                <td class="px-6 py-4">${log.batimentos} BPM</td>
+                            </tr>
+                        `;
+                    });
+                }
+            } catch (error) {
+                console.error("Erro ao buscar dados da API:", error);
+            }
+        }
+
+        // Atualiza automaticamente a cada 5 segundos
+        setInterval(buscarDados, 5000);
+        // Busca na primeira carga
+        buscarDados();
+    </script>
+</body>
+</html>
