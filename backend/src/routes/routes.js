@@ -28,7 +28,16 @@ routes.get('/vitals/:babyId', SinalVitalController.show);
 // Rota para o ESP32 enviar dados
 routes.post('/vitals', SinalVitalController.store);
 
-// Rota para a ONG/Mãe ver todos os dados
+/**
+ * @swagger
+ * /vitals:
+ *   get:
+ *     summary: Retorna todos os sinais vitais
+ *     description: Lista o histórico completo de todos os bebês para análise da ONG.
+ *     responses:
+ *       200:
+ *         description: Lista de dados retornada com sucesso.
+ */
 routes.get('/vitals', SinalVitalController.index);
 
 module.exports = routes;
