@@ -25,7 +25,34 @@ const SinalVitalController = require('../controllers/SinalVitalController');
  */
 routes.get('/vitals/:babyId', SinalVitalController.show);
 
-// Rota para o ESP32 enviar dados
+/**
+ * @swagger
+ * /vitals:
+ *   post:
+ *     summary: Recebe dados do ESP32
+ *     description: Salva os batimentos e temperatura enviados pela pulseira IoT.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               babyId:
+ *                 type: string
+ *                 example: Prematuro_01
+ *               temperatura:
+ *                 type: number
+ *                 example: 36.8
+ *               batimentos:
+ *                 type: number
+ *                 example: 125
+ *     responses:
+ *       201:
+ *         description: Sinais vitais salvos com sucesso no MongoDB.
+ *       500:
+ *         description: Erro interno no servidor.
+ */
 routes.post('/vitals', SinalVitalController.store);
 
 /**
