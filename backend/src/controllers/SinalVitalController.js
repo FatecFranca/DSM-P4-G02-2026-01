@@ -39,10 +39,6 @@ async show(req, res) {
     const { babyId } = req.params; // Pega o ID que vem na URL
     const registros = await SinalVital.find({ babyId }).sort({ dataHora: -1 });
     
-    if (registros.length === 0) {
-      return res.status(404).json({ mensagem: 'Nenhum dado encontrado para este bebê.' });
-    }
-
     return res.json(registros);
   } catch (error) {
     return res.status(500).json({ erro: 'Erro ao buscar dados do bebê específico' });

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NeoVínculo - Dashboard ONG</title>
+    <title> NeoVínculo - Dashboard PI</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
@@ -56,12 +56,22 @@
         </div>
 
         <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-            <div class="p-6 border-b border-slate-100 flex justify-between items-center">
-                <h3 class="text-lg font-bold text-slate-800">Histórico de Coleta</h3>
-                <button onclick="buscarDados()" class="text-sky-600 hover:text-sky-700 text-sm font-medium">
-                    <i class="fa-solid fa-rotate mr-1"></i> Atualizar
-                </button>
-            </div>
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+    <h3 class="text-lg font-bold text-slate-800">Histórico de Coleta</h3>
+    
+    <div class="flex items-center gap-4">
+        <label for="filtro-bebe" class="text-sm font-medium text-slate-600">Filtrar por Bebê:</label>
+        <select id="filtro-bebe" onchange="buscarDados()" class="border border-slate-300 rounded-lg text-sm p-2 text-slate-700 focus:outline-none focus:border-sky-500">
+            <option value="todos">Todos (Visão ONG)</option>
+            <option value="Prematuro_01">Prematuro_01 (Mãe 1)</option>
+            <option value="Prematuro_02">Prematuro_02 (Mãe 2)</option>
+        </select>
+        
+        <button onclick="buscarDados()" class="text-sky-600 hover:text-sky-700 text-sm font-medium ml-4">
+            <i class="fa-solid fa-rotate mr-1"></i> Atualizar
+        </button>
+    </div>
+</div>
             <table class="w-full text-left">
                 <thead class="bg-slate-50 text-slate-500 uppercase text-xs">
                     <tr>
@@ -80,31 +90,35 @@
     <script>
         async function buscarDados() {
             try {
-                const response = await fetch('http://localhost:3000/vitals');
-                const dados = await response.json();
+                const bebeSelecionado = document.getElementById('filtro-bebe').value;
+                let url = 'http://localhost:3000/vitals';
 
-                if (dados.length > 0) {
+                if (bebeSelecionado !== 'todos') {
+                    url = `http://localhost:3000/vitals/${bebeSelecionado}`;
+                }
+
+                const response = await fetch(url);
+                const dados = response.ok ? await response.json() : [];
+
+                const tabela = document.getElementById('logs-table');
+                tabela.innerHTML = ''; // Limpa a tabela
+
+                if (Array.isArray(dados) && dados.length > 0) {
                     const ultimo = dados[0]; // Pega o mais recente
-                    
-                    // Atualiza os Cards
+
                     document.getElementById('current-temp').innerText = `${ultimo.temperatura}°C`;
                     document.getElementById('current-bpm').innerText = `${ultimo.batimentos} BPM`;
 
-                    // Lógica de Status
                     const statusCard = document.getElementById('status-card');
                     const statusText = document.getElementById('current-status');
-                    
-                    if (ultimo.temperatura > 37.5) {
-                        statusText.innerText = "Febre Detectada!";
+
+                    if (ultimo.temperatura > 37.5 || ultimo.batimentos > 160) {
+                        statusText.innerText = "Atenção Necessária";
                         statusCard.className = "bg-red-50 p-6 rounded-2xl shadow-sm border border-red-200";
                     } else {
                         statusText.innerText = "Sinais Estáveis";
                         statusCard.className = "bg-green-50 p-6 rounded-2xl shadow-sm border border-green-200";
                     }
-
-                    // Atualiza a Tabela
-                    const tabela = document.getElementById('logs-table');
-                    tabela.innerHTML = ''; // Limpa a tabela
 
                     dados.forEach(log => {
                         const data = new Date(log.dataHora).toLocaleString('pt-BR');
@@ -117,9 +131,25 @@
                             </tr>
                         `;
                     });
+                } else {
+                    document.getElementById('current-temp').innerText = '--°C';
+                    document.getElementById('current-bpm').innerText = '-- BPM';
+                    document.getElementById('current-status').innerText = 'Sem dados disponíveis';
+                    document.getElementById('status-card').className = 'bg-slate-100 p-6 rounded-2xl shadow-sm border border-slate-200';
+                    tabela.innerHTML = `
+                        <tr>
+                            <td class="px-6 py-4 text-slate-500" colspan="4">Nenhum dado encontrado para o filtro selecionado.</td>
+                        </tr>
+                    `;
                 }
             } catch (error) {
                 console.error("Erro ao buscar dados da API:", error);
+                const tabela = document.getElementById('logs-table');
+                tabela.innerHTML = `
+                    <tr>
+                        <td class="px-6 py-4 text-red-500" colspan="4">Erro ao buscar dados. Verifique se o backend está rodando.</td>
+                    </tr>
+                `;
             }
         }
 

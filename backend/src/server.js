@@ -21,7 +21,7 @@ const swaggerOptions = {
     info: {
       title: 'NeoVínculo API',
       version: '1.0.0',
-      description: 'Documentação da API de monitoramento de sinais vitais para a ONG Universo Prematuro',
+      description: 'Documentação da API de monitoramento de sinais vitais PI 4° semestre',
       contact: { name: 'Ana Júlia - Backend Lead' }
     },
     servers: [{ url: 'http://localhost:3000', description: 'Servidor Local' }],
