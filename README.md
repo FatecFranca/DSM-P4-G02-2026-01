@@ -6,7 +6,7 @@ Alunos:  Ana Julia Ferreira Rodrigues, Guilherme Laurindo de Souza Silva, Julian
 
 > **Projeto Interdisciplinar - 4º Semestre** > Curso: Desenvolvimento de Software Multiplataforma (DSM) - FATEC
 
-O **NeoVínculo** é uma solução de IoT desenvolvida para monitorar sinais vitais (temperatura e batimentos cardíacos) de bebês prematuros. O sistema conecta uma pulseira inteligente a uma API REST, permitindo o acompanhamento em tempo real por responsáveis (via Mobile) e pela ONG **Universo Prematuro** (via Dashboard Web).
+O **NeoVínculo** é uma solução de IoT desenvolvida para monitorar sinais vitais (temperatura e batimentos cardíacos) de bebês prematuros. O sistema conecta uma pulseira inteligente a uma API REST, permitindo o acompanhamento em tempo real por responsáveis (via Mobile) e via Dashboard Web.
 
 ---
 
