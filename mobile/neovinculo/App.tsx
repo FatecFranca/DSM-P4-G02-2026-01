@@ -1,45 +1,56 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 
-import { NewAppScreen } from '@react-native/new-app-screen';
-import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
-import {
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
-
-function App() {
-  const isDarkMode = useColorScheme() === 'dark';
-
-  return (
-    <SafeAreaProvider>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <AppContent />
-    </SafeAreaProvider>
-  );
-}
-
-function AppContent() {
-  const safeAreaInsets = useSafeAreaInsets();
-
+export default function App() {
   return (
     <View style={styles.container}>
-      <NewAppScreen
-        templateFileName="App.tsx"
-        safeAreaInsets={safeAreaInsets}
-      />
+      <Text>Funcionando sim</Text>
+      <Text>ADOROO</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});
-
-export default App;
+      container:{
+        flex: 1,
+        backgroundColor: "#FFF",
+      },
+  //     content:{
+  //       alignSelf: 'center',
+  //       width: "98%",
+  //       height: 120,
+  //       marginBottom: 20,
+  //       backgroundColor: "#f1f1f1",
+  //       alignItems: 'center',
+  //       justifyContent: 'center',
+  //     },
+       header:{
+        backgroundColor: '#004AAD',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingLeft: 10,
+        paddingRight: 10,
+        height: 80,
+        marginTop: 0,
+        
+    },
+     mensagem:{
+      width:50,
+      height:50,
+      fontSize: 40,
+      fontWeight: 'bold',
+      color: '#fff' ,
+     },
+    buttonn: {
+      flexDirection: 'row', 
+      alignItems: 'center', 
+      backgroundColor: '#fff', 
+      borderWidth: 0.5, 
+      borderColor: '#fff', 
+      width:45,
+      height:45, 
+      borderRadius: 5, 
+      margin: 5, 
+      resizeMode: 'contain',  },
+  });
