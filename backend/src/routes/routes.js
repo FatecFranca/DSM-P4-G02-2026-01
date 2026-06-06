@@ -5,7 +5,56 @@ const routes = express.Router();
 const SinalVitalController = require('../controllers/SinalVitalController');
 const AuthController = require('../controllers/AuthController');
 const BebeController = require('../controllers/BebeController');
+const ColetaController = require('../controllers/ColetaController');
 
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     LoginRequest:
+ *       type: object
+ *       properties:
+ *         email:
+ *           type: string
+ *           example: usuario@exemplo.com
+ *         senha:
+ *           type: string
+ *           example: senha123
+ *     LoginResponse:
+ *       type: object
+ *       properties:
+ *         token:
+ *           type: string
+ *         bebe:
+ *           $ref: '#/components/schemas/Bebe'
+ *     Bebe:
+ *       type: object
+ *       properties:
+ *         babyId:
+ *           type: string
+ *         nome:
+ *           type: string
+ *         dataNascimento:
+ *           type: string
+ *           format: date
+ *         sexo:
+ *           type: string
+ *           enum: [M, F, O]
+ *     Coleta:
+ *       type: object
+ *       properties:
+ *         _id:
+ *           type: string
+ *         babyId:
+ *           type: string
+ *         temperatura:
+ *           type: number
+ *         batimentos:
+ *           type: number
+ *         dataHora:
+ *           type: string
+ *           format: date-time
+ */
 /**
  * @swagger
  * /auth/login:
@@ -17,17 +66,14 @@ const BebeController = require('../controllers/BebeController');
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             properties:
- *               email:
- *                 type: string
- *                 example: usuario@exemplo.com
- *               senha:
- *                 type: string
- *                 example: senha123
+ *             $ref: '#/components/schemas/LoginRequest'
  *     responses:
  *       200:
  *         description: Login efetuado com sucesso.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/LoginResponse'
  *       400:
  *         description: Email ou senha não informados.
  *       401:
@@ -51,10 +97,70 @@ routes.post('/auth/login', AuthController.login);
  *     responses:
  *       200:
  *         description: Bebê encontrado com sucesso.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Bebe'
  *       404:
  *         description: Bebê não encontrado.
  */
 routes.get('/bebes/:id', BebeController.show);
+
+/**
+ * @swagger
+ * /coletas/{bebeId}:
+ *   get:
+ *     summary: Retorna coletas de um bebê
+ *     description: Consulta o histórico de coletas do bebê, com limite opcional.
+ *     parameters:
+ *       - in: path
+ *         name: bebeId
+ *         required: true
+ *         description: "O identificador do bebê (ex: Prematuro_01)"
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: limite
+ *         required: false
+ *         description: "Quantidade máxima de coletas retornadas"
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Lista de coletas retornada com sucesso.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Coleta'
+ */
+routes.get('/coletas/:bebeId', ColetaController.index);
+
+/**
+ * @swagger
+ * /coletas/{bebeId}/ultima:
+ *   get:
+ *     summary: Retorna a última coleta de um bebê
+ *     description: Busca a coleta mais recente do bebê pelo ID.
+ *     parameters:
+ *       - in: path
+ *         name: bebeId
+ *         required: true
+ *         description: "O identificador do bebê (ex: Prematuro_01)"
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Última coleta retornada com sucesso.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Coleta'
+ *       404:
+ *         description: Nenhuma coleta encontrada.
+ */
+routes.get('/coletas/:bebeId/ultima', ColetaController.ultima);
 
 /**
  * @swagger
