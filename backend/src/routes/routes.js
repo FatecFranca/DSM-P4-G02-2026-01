@@ -7,6 +7,7 @@ const AuthController = require('../controllers/AuthController');
 const BebeController = require('../controllers/BebeController');
 const ColetaController = require('../controllers/ColetaController');
 const EstatisticaController = require('../controllers/EstatisticaController');
+const NotificacaoController = require('../controllers/NotificacaoController');
 
 /**
  * @swagger
@@ -117,6 +118,46 @@ const EstatisticaController = require('../controllers/EstatisticaController');
  *         description: Credenciais inválidas.
  */
 routes.post('/auth/login', AuthController.login);
+
+/**
+ * @swagger
+ * /notificacoes/token:
+ *   post:
+ *     summary: Salva token de push notification
+ *     description: Recebe o token de push para notificações do bebê e salva no banco.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               bebeId:
+ *                 type: string
+ *                 example: Prematuro_01
+ *               token:
+ *                 type: string
+ *                 example: expoPushToken[xxxxxxxxxxxxxx]
+ *               plataforma:
+ *                 type: string
+ *                 example: android
+ *               deviceId:
+ *                 type: string
+ *                 example: device-123
+ *             required:
+ *               - bebeId
+ *               - token
+ *     responses:
+ *       201:
+ *         description: Token salvo com sucesso.
+ *       200:
+ *         description: Token já cadastrado.
+ *       400:
+ *         description: Parâmetros obrigatórios ausentes.
+ *       500:
+ *         description: Erro interno ao salvar o token.
+ */
+routes.post('/notificacoes/token', NotificacaoController.store);
 
 /**
  * @swagger
