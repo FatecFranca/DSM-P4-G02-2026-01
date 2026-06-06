@@ -37,7 +37,7 @@ export const VITAL_THRESHOLDS = {
   },
 };
 
-export const API_URL = 'http://SEU_IP_OU_DOMINIO:3000'; // Troque pelo seu backend
-export const SOCKET_URL = 'http://SEU_IP_OU_DOMINIO:3000';
+export const API_URL = 'http://192.168.24.5:3000'; // Troque pelo seu backend
+export const SOCKET_URL = 'http://192.168.24.5:3000';
 
 export const COLETA_INTERVAL_MS = 30000; // 30 segundos (igual ao IoT)

@@ -24,7 +24,7 @@ function ColetaItem({ item }: { item: Coleta }) {
             {normal ? 'Sinais normais' : '⚠️ Fora do normal'}
           </Text>
           <Text style={styles.itemTime}>
-            {format(new Date(item.timestamp), 'HH:mm:ss', { locale: ptBR })}
+            {format(new Date(item.dataHora), 'HH:mm:ss', { locale: ptBR })}
           </Text>
         </View>
         <Text style={styles.itemVals}>
@@ -48,9 +48,9 @@ export default function ColetasScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const carregar = useCallback(async () => {
-    if (!bebeId) return;
+    if (!babyId) return;
     try {
-      const coletas = await fetchColetasRecentes(bebeId, 30);
+      const coletas = await fetchColetasRecentes(babyId, 30);
       coletas.forEach(adicionarColeta);
     } catch (err) {
       console.error(err);

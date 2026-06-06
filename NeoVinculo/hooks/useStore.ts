@@ -1,6 +1,6 @@
 // hooks/useStore.ts
 import { create } from 'zustand';
-import { Bebe, Coleta, EstatisticasDia } from '../services/api';
+import { Bebe, Coleta, EstatisticasDia, HistoricoHora } from '../services/api';
 
 type Alerta = {
   id: string;
@@ -13,8 +13,8 @@ type Alerta = {
 type AppState = {
   // Auth
   token: string | null;
-  bebeId: string | null;
-  setAuth: (token: string, bebeId: string) => void;
+  babyId: string | null;          // usa babyId igual ao backend (ex: "Prematuro_01")
+  setAuth: (token: string, babyId: string) => void;
   logout: () => void;
 
   // Dados do bebê
@@ -29,9 +29,9 @@ type AppState = {
 
   // Estatísticas
   estatisticas: EstatisticasDia | null;
-  historicoHoras: { hora: string; mediaBatimentos: number; mediaTemperatura: number }[];
+  historicoHoras: HistoricoHora[];
   setEstatisticas: (e: EstatisticasDia) => void;
-  setHistoricoHoras: (h: AppState['historicoHoras']) => void;
+  setHistoricoHoras: (h: HistoricoHora[]) => void;
 
   // Alertas
   alertas: Alerta[];
@@ -45,14 +45,14 @@ type AppState = {
 
 export const useStore = create<AppState>((set) => ({
   token: null,
-  bebeId: null,
-  setAuth: (token, bebeId) => {
+  babyId: null,
+  setAuth: (token, babyId) => {
     global.__authToken = token;
-    set({ token, bebeId });
+    set({ token, babyId });
   },
   logout: () => {
     global.__authToken = undefined;
-    set({ token: null, bebeId: null, bebe: null, ultimaColeta: null, coletasRecentes: [], alertas: [] });
+    set({ token: null, babyId: null, bebe: null, ultimaColeta: null, coletasRecentes: [], alertas: [] });
   },
 
   bebe: null,

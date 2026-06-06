@@ -7,7 +7,7 @@ import { VITAL_THRESHOLDS } from '../constants';
 import { Coleta } from '../services/api';
 
 export const useVitaisTempoReal = () => {
-  const { bebeId, adicionarColeta, adicionarAlerta, setConectado } = useStore();
+  const { babyId, adicionarColeta, adicionarAlerta, setConectado } = useStore();
 
   const checarLimites = useCallback((coleta: Coleta) => {
     const { batimentos, temperatura } = coleta;
@@ -20,7 +20,7 @@ export const useVitaisTempoReal = () => {
         id: `${coleta._id}-bpm`,
         tipo: 'batimentos',
         mensagem: msg,
-        timestamp: coleta.timestamp,
+        timestamp: coleta.dataHora,   // campo correto do seu backend
         coleta,
       });
     }
@@ -32,16 +32,16 @@ export const useVitaisTempoReal = () => {
         id: `${coleta._id}-temp`,
         tipo: 'temperatura',
         mensagem: msg,
-        timestamp: coleta.timestamp,
+        timestamp: coleta.dataHora,
         coleta,
       });
     }
   }, [adicionarAlerta]);
 
   useEffect(() => {
-    if (!bebeId) return;
+    if (!babyId) return;
 
-    const socket = conectarSocket(bebeId);
+    const socket = conectarSocket(babyId);
 
     socket.on('connect', () => setConectado(true));
     socket.on('disconnect', () => setConectado(false));
@@ -52,7 +52,6 @@ export const useVitaisTempoReal = () => {
     });
 
     onAlerta((alerta) => {
-      // Alertas vindos direto do backend (ex: algoritmo mais complexo)
       exibirAlertaLocal('⚠️ Alerta do Sistema', alerta.mensagem);
       adicionarAlerta({
         id: `server-${Date.now()}`,
@@ -67,5 +66,5 @@ export const useVitaisTempoReal = () => {
       desconectarSocket();
       setConectado(false);
     };
-  }, [bebeId]);
+  }, [babyId]);
 };

@@ -33,16 +33,16 @@ function RangeBar({ min, max, absMin, absMax, color }: { min: number; max: numbe
 
 export default function EstatisticasScreen() {
   const insets = useSafeAreaInsets();
-  const { bebeId, estatisticas, historicoHoras, setEstatisticas, setHistoricoHoras } = useStore();
+  const { babyId, estatisticas, historicoHoras, setEstatisticas, setHistoricoHoras } = useStore();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const carregar = useCallback(async () => {
-    if (!bebeId) return;
+    if (!babyId) return;
     try {
       const [stats, horas] = await Promise.all([
-        fetchEstatisticasDia(bebeId),
-        fetchHistoricoHoras(bebeId, 12),
+        fetchEstatisticasDia(babyId),
+        fetchHistoricoHoras(babyId, 12),
       ]);
       setEstatisticas(stats);
       setHistoricoHoras(horas);
@@ -65,12 +65,12 @@ export default function EstatisticasScreen() {
   }
 
   const bpmData = {
-    labels: historicoHoras.slice(-6).map((h) => h.hora),
+    labels: historicoHoras.slice(-6).map((h) => h.dataHora),
     datasets: [{ data: historicoHoras.slice(-6).map((h) => h.mediaBatimentos || 140) }],
   };
 
   const tempData = {
-    labels: historicoHoras.slice(-6).map((h) => h.hora),
+    labels: historicoHoras.slice(-6).map((h) => h.dataHora),
     datasets: [{ data: historicoHoras.slice(-6).map((h) => h.mediaTemperatura || 36.8) }],
   };
 

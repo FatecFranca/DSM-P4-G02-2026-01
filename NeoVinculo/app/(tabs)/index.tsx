@@ -44,17 +44,17 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const {
     bebe, ultimaColeta, alertas, historicoHoras,
-    bebeId, setUltimaColeta, setHistoricoHoras,
+    babyId, setUltimaColeta, setHistoricoHoras,
   } = useStore();
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const carregar = useCallback(async () => {
-    if (!bebeId) return;
+    if (!babyId) return;
     try {
       const [coleta, historico] = await Promise.all([
-        fetchUltimaColeta(bebeId),
-        fetchHistoricoHoras(bebeId, 6),
+        fetchUltimaColeta(babyId),
+        fetchHistoricoHoras(babyId, 6),
       ]);
       setUltimaColeta(coleta);
       setHistoricoHoras(historico);
@@ -102,7 +102,7 @@ export default function HomeScreen() {
         </Text>
         {ultimaColeta && (
           <Text style={styles.updateTime}>
-            Última coleta: {format(new Date(ultimaColeta.timestamp), "HH:mm:ss", { locale: ptBR })}
+            Última coleta: {format(new Date(ultimaColeta.dataHora), "HH:mm:ss", { locale: ptBR })}
           </Text>
         )}
       </View>

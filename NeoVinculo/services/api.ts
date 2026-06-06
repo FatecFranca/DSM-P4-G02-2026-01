@@ -1,6 +1,7 @@
 // services/api.ts
 import axios from 'axios';
 import { API_URL } from '../constants';
+import { format } from 'date-fns';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -15,37 +16,43 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// ---- Tipagens ----
+// ---- Tipagens alinhadas com seu backend ----
 
 export type Coleta = {
   _id: string;
-  bebeId: string;
+  babyId: string;          // seu backend usa babyId (não bebeId)
   temperatura: number;
   batimentos: number;
-  timestamp: string;
-  status: 'normal' | 'alerta' | 'critico';
+  dataHora: string;        // seu backend usa dataHora (não timestamp)
+  status?: 'normal' | 'alerta' | 'critico';
 };
 
 export type Bebe = {
-  _id: string;
+  babyId: string;          // seu backend usa babyId como identificador
   nome: string;
   dataNascimento: string;
-  semanasGestacao: number;
-  peso: number;
-  comprimento: number;
-  leito: string;
-  mae: string;
+  sexo: 'M' | 'F' | 'O';
+  // campos extras que seu backend retornar também aparecerão aqui
 };
 
 export type EstatisticasDia = {
+  bebeId: string;
+  data: string;
+  totalColetas: number;
   mediaBatimentos: number;
   mediaTemperatura: number;
   minBatimentos: number;
   maxBatimentos: number;
   minTemperatura: number;
   maxTemperatura: number;
+};
+
+export type HistoricoHora = {
+  bebeId: string;
+  dataHora: string;        // seu backend usa dataHora
   totalColetas: number;
-  totalAlertas: number;
+  mediaBatimentos: number;
+  mediaTemperatura: number;
 };
 
 // ---- Auth ----
@@ -53,52 +60,60 @@ export type EstatisticasDia = {
 export const login = async (email: string, senha: string) => {
   const res = await api.post('/auth/login', { email, senha });
   global.__authToken = res.data.token;
-  return res.data;
+  return res.data; // { token, bebe: { babyId, nome, ... } }
 };
 
 // ---- Bebê ----
 
-export const fetchBebe = async (bebeId: string): Promise<Bebe> => {
-  const res = await api.get(`/bebes/${bebeId}`);
+export const fetchBebe = async (babyId: string): Promise<Bebe> => {
+  const res = await api.get(`/bebes/${babyId}`);
   return res.data;
 };
 
 // ---- Coletas ----
 
 export const fetchColetasRecentes = async (
-  bebeId: string,
+  babyId: string,
   limite = 20
 ): Promise<Coleta[]> => {
-  const res = await api.get(`/coletas/${bebeId}`, {
+  const res = await api.get(`/coletas/${babyId}`, {
     params: { limite },
   });
   return res.data;
 };
 
-export const fetchUltimaColeta = async (bebeId: string): Promise<Coleta> => {
-  const res = await api.get(`/coletas/${bebeId}/ultima`);
+export const fetchUltimaColeta = async (babyId: string): Promise<Coleta> => {
+  const res = await api.get(`/coletas/${babyId}/ultima`);
   return res.data;
 };
 
 // ---- Estatísticas ----
 
 export const fetchEstatisticasDia = async (
-  bebeId: string,
-  data?: string // formato YYYY-MM-DD, padrão = hoje
+  babyId: string,
+  data?: string  // YYYY-MM-DD — obrigatório no seu backend
 ): Promise<EstatisticasDia> => {
-  const res = await api.get(`/estatisticas/${bebeId}/dia`, {
-    params: { data },
+  const dataParam = data ?? format(new Date(), 'yyyy-MM-dd');
+  const res = await api.get(`/estatisticas/${babyId}/dia`, {
+    params: { data: dataParam },
   });
   return res.data;
 };
 
 export const fetchHistoricoHoras = async (
-  bebeId: string,
+  babyId: string,
   horas = 6
-): Promise<{ hora: string; mediaBatimentos: number; mediaTemperatura: number }[]> => {
-  const res = await api.get(`/estatisticas/${bebeId}/horas`, {
+): Promise<HistoricoHora[]> => {
+  const res = await api.get(`/estatisticas/${babyId}/horas`, {
     params: { horas },
   });
+  return res.data;
+};
+
+// ---- Sinais vitais diretos do IoT (rota extra do seu backend) ----
+
+export const fetchVitais = async (babyId: string) => {
+  const res = await api.get(`/vitals/${babyId}`);
   return res.data;
 };
 

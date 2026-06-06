@@ -23,7 +23,7 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       const data = await login(email.trim(), senha);
-      setAuth(data.token, data.bebe._id);
+      setAuth(data.token, data.bebe.babyId);
       setBebe(data.bebe);
       router.replace('/(tabs)');
     } catch (err: any) {
@@ -39,8 +39,8 @@ export default function LoginScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <View style={styles.header}>
-        <Text style={styles.emoji}>🚼​</Text>
-        <Text style={styles.title}>NeoVinculo</Text>
+        <Text style={styles.emoji}>🍼</Text>
+        <Text style={styles.title}>Baby Monitor</Text>
         <Text style={styles.subtitle}>Acompanhe seu bebê de onde estiver</Text>
       </View>
 
