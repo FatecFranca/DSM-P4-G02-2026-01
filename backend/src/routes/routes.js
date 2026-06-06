@@ -6,6 +6,7 @@ const SinalVitalController = require('../controllers/SinalVitalController');
 const AuthController = require('../controllers/AuthController');
 const BebeController = require('../controllers/BebeController');
 const ColetaController = require('../controllers/ColetaController');
+const EstatisticaController = require('../controllers/EstatisticaController');
 
 /**
  * @swagger
@@ -54,6 +55,42 @@ const ColetaController = require('../controllers/ColetaController');
  *         dataHora:
  *           type: string
  *           format: date-time
+ *     EstatisticasDia:
+ *       type: object
+ *       properties:
+ *         bebeId:
+ *           type: string
+ *         data:
+ *           type: string
+ *           format: date
+ *         totalColetas:
+ *           type: integer
+ *         mediaBatimentos:
+ *           type: number
+ *         mediaTemperatura:
+ *           type: number
+ *         minBatimentos:
+ *           type: integer
+ *         maxBatimentos:
+ *           type: integer
+ *         minTemperatura:
+ *           type: number
+ *         maxTemperatura:
+ *           type: number
+ *     HistoricoHora:
+ *       type: object
+ *       properties:
+ *         bebeId:
+ *           type: string
+ *         dataHora:
+ *           type: string
+ *           format: date-time
+ *         totalColetas:
+ *           type: integer
+ *         mediaBatimentos:
+ *           type: number
+ *         mediaTemperatura:
+ *           type: number
  */
 /**
  * @swagger
@@ -136,6 +173,73 @@ routes.get('/bebes/:id', BebeController.show);
  *                 $ref: '#/components/schemas/Coleta'
  */
 routes.get('/coletas/:bebeId', ColetaController.index);
+
+/**
+ * @swagger
+ * /estatisticas/{bebeId}/dia:
+ *   get:
+ *     summary: Estatísticas do bebê por dia
+ *     description: Retorna as estatísticas agregadas de batimentos e temperatura para um bebê em uma data específica.
+ *     parameters:
+ *       - in: path
+ *         name: bebeId
+ *         required: true
+ *         description: "O identificador do bebê (ex: Prematuro_01)"
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: data
+ *         required: true
+ *         description: "Data no formato YYYY-MM-DD"
+ *         schema:
+ *           type: string
+ *           format: date
+ *     responses:
+ *       200:
+ *         description: Estatísticas do dia retornadas com sucesso.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/EstatisticasDia'
+ *       400:
+ *         description: Parâmetro data inválido ou ausente.
+ *       404:
+ *         description: Nenhuma coleta encontrada para a data informada.
+ */
+routes.get('/estatisticas/:bebeId/dia', EstatisticaController.estatisticasDia);
+
+/**
+ * @swagger
+ * /estatisticas/{bebeId}/horas:
+ *   get:
+ *     summary: Histórico de estatísticas por hora
+ *     description: Retorna as estatísticas agregadas por hora para as últimas N horas.
+ *     parameters:
+ *       - in: path
+ *         name: bebeId
+ *         required: true
+ *         description: "O identificador do bebê (ex: Prematuro_01)"
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: horas
+ *         required: true
+ *         description: "Quantidade de horas anteriores para retorno do histórico"
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Histórico de horas retornado com sucesso.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/HistoricoHora'
+ *       400:
+ *         description: Parâmetro horas inválido ou ausente.
+ */
+routes.get('/estatisticas/:bebeId/horas', EstatisticaController.historicoHoras);
 
 /**
  * @swagger
