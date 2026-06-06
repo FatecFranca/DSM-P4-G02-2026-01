@@ -39,7 +39,17 @@ io.on('connection', (socket) => {
 });
 
 // --- CONFIGURAÇÃO DO SWAGGER ---
-const swaggerOptions = { /* ... igual ao seu, não muda ... */ };
+const swaggerOptions = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'NeoVínculo API',
+      version: '1.0.0',
+      description: 'API de monitoramento de sinais vitais',
+    },
+  },
+  apis: ['./src/routes/*.js'],
+};
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 

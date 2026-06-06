@@ -1,47 +1,56 @@
+// controllers/SinalVitalController.js
 const SinalVital = require('../models/SinalVital');
 
 module.exports = {
-  // Função para salvar novos dados (o ESP32)
+  async index(req, res) {
+    try {
+      const sinais = await SinalVital.find().sort({ dataHora: -1 }).exec();
+      return res.json(sinais);
+    } catch (err) {
+      return res.status(500).json({ erro: err.message });
+    }
+  },
+
+  async show(req, res) {
+    try {
+      const { babyId } = req.params;
+      const sinais = await SinalVital.find({ babyId }).sort({ dataHora: -1 }).exec();
+      if (!sinais || sinais.length === 0) {
+        return res.status(404).json({ erro: 'Bebê não encontrado ou sem sinais.' });
+      }
+      return res.json(sinais);
+    } catch (err) {
+      return res.status(500).json({ erro: err.message });
+    }
+  },
+
   async store(req, res) {
     try {
       const { babyId, temperatura, batimentos } = req.body;
 
-      const novaLeitura = await SinalVital.create({
-        babyId,
-        temperatura,
-        batimentos
-      });
+      const coleta = await SinalVital.create({ babyId, temperatura, batimentos, dataHora: new Date() });
 
-      // Lógica de Alerta 
-      if (temperatura >= 37.5) {
-        console.log(`⚠️ ALERTA: Bebê ${babyId} com febre!`);
+      const io = req.app.get('io');
+      if (io) {
+        io.to(babyId).emit('nova-coleta', coleta);
+
+        const tempAnormal = temperatura < 36.5 || temperatura > 37.5;
+        const bpmAnormal = batimentos < 120 || batimentos > 160;
+
+        if (tempAnormal || bpmAnormal) {
+          io.to(babyId).emit('alerta-vital', {
+            tipo: tempAnormal ? 'temperatura' : 'batimentos',
+            mensagem: tempAnormal
+              ? `Temperatura fora do normal: ${temperatura}°C`
+              : `Batimentos fora do normal: ${batimentos} bpm`,
+            coleta,
+          });
+        }
       }
 
-      return res.status(201).json(novaLeitura);
-    } catch (error) {
-      return res.status(400).json({ erro: 'Erro ao salvar dados' });
+      return res.status(201).json(coleta);
+    } catch (err) {
+      return res.status(500).json({ erro: err.message });
     }
-  },
-
-  // Função para listar tudo (a ONG e a Estatística)
-  async index(req, res) {
-    try {
-      const registros = await SinalVital.find().sort({ dataHora: -1 });
-      return res.json(registros);
-    } catch (error) {
-      return res.status(500).json({ erro: 'Erro ao buscar dados' });
-    }
-  },
-
-  // Função para mostrar dados de um bebê específico
-async show(req, res) {
-  try {
-    const { babyId } = req.params; // Pega o ID que vem na URL
-    const registros = await SinalVital.find({ babyId }).sort({ dataHora: -1 });
-    
-    return res.json(registros);
-  } catch (error) {
-    return res.status(500).json({ erro: 'Erro ao buscar dados do bebê específico' });
   }
-}
 };
