@@ -3,6 +3,7 @@ import axios from 'axios';
 import { API_URL } from '../constants';
 import { format } from 'date-fns';
 
+
 const api = axios.create({
   baseURL: API_URL,
   timeout: 10000,
@@ -11,7 +12,7 @@ const api = axios.create({
 
 // Interceptor: adiciona token JWT automaticamente
 api.interceptors.request.use((config) => {
-  const token = global.__authToken;
+  const token = (globalThis as any).__authToken;
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
@@ -59,7 +60,7 @@ export type HistoricoHora = {
 
 export const login = async (email: string, senha: string) => {
   const res = await api.post('/auth/login', { email, senha });
-  global.__authToken = res.data.token;
+  (globalThis as any).__authToken = res.data.token;
   return res.data; // { token, bebe: { babyId, nome, ... } }
 };
 
