@@ -4,6 +4,7 @@ const routes = express.Router();
 // controllers
 const SinalVitalController = require('../controllers/SinalVitalController');
 const AuthController = require('../controllers/AuthController');
+const BebeController = require('../controllers/BebeController');
 
 /**
  * @swagger
@@ -33,6 +34,27 @@ const AuthController = require('../controllers/AuthController');
  *         description: Credenciais inválidas.
  */
 routes.post('/auth/login', AuthController.login);
+
+/**
+ * @swagger
+ * /bebes/{id}:
+ *   get:
+ *     summary: Retorna os dados do bebê por ID
+ *     description: Busca informações básicas do bebê cadastrado.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: "O identificador do bebê (ex: Prematuro_01)"
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Bebê encontrado com sucesso.
+ *       404:
+ *         description: Bebê não encontrado.
+ */
+routes.get('/bebes/:id', BebeController.show);
 
 /**
  * @swagger
