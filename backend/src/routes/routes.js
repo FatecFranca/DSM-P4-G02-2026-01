@@ -1,8 +1,38 @@
 const express = require('express');
 const routes = express.Router();
 
-// controller
+// controllers
 const SinalVitalController = require('../controllers/SinalVitalController');
+const AuthController = require('../controllers/AuthController');
+
+/**
+ * @swagger
+ * /auth/login:
+ *   post:
+ *     summary: Autentica usuário e retorna token de sessão
+ *     description: Recebe email e senha e retorna um token válido junto com os dados do bebê associado.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: usuario@exemplo.com
+ *               senha:
+ *                 type: string
+ *                 example: senha123
+ *     responses:
+ *       200:
+ *         description: Login efetuado com sucesso.
+ *       400:
+ *         description: Email ou senha não informados.
+ *       401:
+ *         description: Credenciais inválidas.
+ */
+routes.post('/auth/login', AuthController.login);
 
 /**
  * @swagger
