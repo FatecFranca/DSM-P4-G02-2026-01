@@ -111,6 +111,13 @@ export const fetchHistoricoHoras = async (
   return res.data;
 };
 
+export const fetchAnalyticsAvancadas = async (
+  babyId: string
+) => {
+  const res = await api.get(`/analytics/${babyId}`);
+  return res.data;
+};
+
 // ---- Sinais vitais diretos do IoT (rota extra do seu backend) ----
 
 export const fetchVitais = async (babyId: string) => {

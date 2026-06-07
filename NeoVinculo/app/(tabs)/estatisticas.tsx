@@ -4,7 +4,7 @@ import { View, Text, ScrollView, StyleSheet, RefreshControl, ActivityIndicator }
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS, VITAL_THRESHOLDS } from '../../constants';
 import { useStore } from '../../hooks/useStore';
-import { fetchEstatisticasDia, fetchHistoricoHoras } from '../../services/api';
+import { fetchEstatisticasDia, fetchHistoricoHoras, fetchAnalyticsAvancadas } from '../../services/api';
 import { LineChart } from 'react-native-chart-kit';
 import { Dimensions } from 'react-native';
 import { format } from 'date-fns';
@@ -17,6 +17,19 @@ function StatCard({ label, value, sub, cor }: { label: string; value: string; su
       <Text style={styles.statLabel}>{label}</Text>
       <Text style={[styles.statValue, { color: cor ?? COLORS.primary }]}>{value}</Text>
       <Text style={styles.statSub}>{sub}</Text>
+    </View>
+  );
+}
+
+function AnalysisCard({ label, value, unit, icon, cor }: { label: string; value: number | string; unit: string; icon: string; cor?: string }) {
+  return (
+    <View style={styles.analysisCard}>
+      <Text style={styles.analysisIcon}>{icon}</Text>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.analysisLabel}>{label}</Text>
+        <Text style={[styles.analysisValue, { color: cor ?? COLORS.primary }]}>{value}</Text>
+        <Text style={styles.analysisUnit}>{unit}</Text>
+      </View>
     </View>
   );
 }
@@ -36,23 +49,27 @@ function RangeBar({ min, max, absMin, absMax, color }: {
 
 export default function EstatisticasScreen() {
   const insets = useSafeAreaInsets();
-  // ✅ corrigido: babyId (não bebeId)
   const { babyId, estatisticas, historicoHoras, setEstatisticas, setHistoricoHoras } = useStore();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [analyticsAvancadas, setAnalyticsAvancadas] = useState<any>(null);
 
   const carregar = useCallback(async () => {
     if (!babyId) return;
     setErro(null);
     try {
       const hoje = format(new Date(), 'yyyy-MM-dd');
-      const [stats, horas] = await Promise.all([
+      const [stats, horas, analytics] = await Promise.all([
         fetchEstatisticasDia(babyId, hoje),
         fetchHistoricoHoras(babyId, 12),
+        fetchAnalyticsAvancadas(babyId),
       ]);
       setEstatisticas(stats);
       setHistoricoHoras(horas);
+      if (analytics) {
+        setAnalyticsAvancadas(analytics);
+      }
     } catch (err: any) {
       console.error('Erro estatísticas:', err?.response?.data ?? err.message);
       setErro('Sem dados para hoje. Envie coletas pelo Postman para visualizar.');
@@ -96,6 +113,8 @@ export default function EstatisticasScreen() {
     propsForDots: { r: '3', strokeWidth: '1', stroke: color },
     decimalPlaces: 1,
   });
+
+  const advancedStats = analyticsAvancadas?.resumoGeral;
 
   return (
     <ScrollView
@@ -181,12 +200,110 @@ export default function EstatisticasScreen() {
                   withInnerLines={false} withOuterLines={false}
                   style={{ borderRadius: 8 }} />
               </View>
-              <View style={[styles.chartCard, { marginBottom: 28 }]}>
+              <View style={styles.chartCard}>
                 <Text style={styles.sectionTitle}>Temperatura por hora</Text>
                 <LineChart data={tempData} width={W - 64} height={140}
                   chartConfig={chartConfig(COLORS.success)} bezier
                   withInnerLines={false} withOuterLines={false}
                   style={{ borderRadius: 8 }} />
+              </View>
+            </>
+          )}
+
+          {advancedStats && (
+            <>
+              <View style={styles.divider} />
+              <View style={styles.advancedSection}>
+                <View style={styles.advancedHeader}>
+                  <Text style={styles.advancedTitle}>📈 Análise Avançada</Text>
+                  <Text style={styles.advancedSubtitle}>Dados estatísticos completos</Text>
+                </View>
+
+                <Text style={styles.analysisSubtitle}>💓 Batimentos Cardíacos</Text>
+                <View style={styles.analysisGrid}>
+                  <AnalysisCard 
+                    label="Moda"
+                    value={advancedStats.batimentos?.moda ?? '-'}
+                    unit="bpm (mais frequente)"
+                    icon="🎯"
+                    cor={COLORS.primary}
+                  />
+                  <AnalysisCard 
+                    label="Desvio Padrão"
+                    value={advancedStats.batimentos?.desvio_padrao?.toFixed(1) ?? '-'}
+                    unit="bpm (variabilidade)"
+                    icon="📊"
+                    cor={COLORS.primaryDark}
+                  />
+                </View>
+                <View style={styles.analysisGrid}>
+                  <AnalysisCard 
+                    label="Coef. Variação"
+                    value={`${advancedStats.batimentos?.coeficiente_variacao?.toFixed(1) ?? '-'}%`}
+                    unit="variabilidade relativa"
+                    icon="📐"
+                    cor={COLORS.success}
+                  />
+                  <AnalysisCard 
+                    label="Q3 (75º %ile)"
+                    value={advancedStats.batimentos?.q3?.toFixed(0) ?? '-'}
+                    unit="bpm (75% abaixo)"
+                    icon="📍"
+                    cor={COLORS.info}
+                  />
+                </View>
+                {advancedStats.batimentos?.anomalias_detectadas > 0 && (
+                  <View style={[styles.anomalyAlert, { backgroundColor: COLORS.dangerLight }]}>
+                    <Text style={styles.anomalyText}>
+                      ⚠️ {advancedStats.batimentos.anomalias_detectadas} anomalia(s) detectada(s)
+                    </Text>
+                  </View>
+                )}
+
+                <Text style={[styles.analysisSubtitle, { marginTop: 16 }]}>🌡️  Temperatura</Text>
+                <View style={styles.analysisGrid}>
+                  <AnalysisCard 
+                    label="Moda"
+                    value={advancedStats.temperatura?.moda?.toFixed(1) ?? '-'}
+                    unit="°C (mais frequente)"
+                    icon="🎯"
+                    cor={COLORS.success}
+                  />
+                  <AnalysisCard 
+                    label="Desvio Padrão"
+                    value={advancedStats.temperatura?.desvio_padrao?.toFixed(2) ?? '-'}
+                    unit="°C (variabilidade)"
+                    icon="📊"
+                    cor={COLORS.primaryDark}
+                  />
+                </View>
+                <View style={styles.analysisGrid}>
+                  <AnalysisCard 
+                    label="Coef. Variação"
+                    value={`${advancedStats.temperatura?.coeficiente_variacao?.toFixed(1) ?? '-'}%`}
+                    unit="variabilidade relativa"
+                    icon="📐"
+                    cor={COLORS.success}
+                  />
+                  <AnalysisCard 
+                    label="Mediana"
+                    value={advancedStats.temperatura?.mediana?.toFixed(1) ?? '-'}
+                    unit="°C (valor central)"
+                    icon="➡️"
+                    cor={COLORS.info}
+                  />
+                </View>
+                {advancedStats.temperatura?.anomalias_detectadas > 0 && (
+                  <View style={[styles.anomalyAlert, { backgroundColor: COLORS.dangerLight }]}>
+                    <Text style={styles.anomalyText}>
+                      ⚠️ {advancedStats.temperatura.anomalias_detectadas} anomalia(s) detectada(s)
+                    </Text>
+                  </View>
+                )}
+
+                <Text style={[styles.analysisNote, { marginBottom: 28 }]}>
+                  ℹ️ Dados processados pelo sistema de análise avançada
+                </Text>
               </View>
             </>
           )}
@@ -228,4 +345,77 @@ const styles = StyleSheet.create({
   },
   erroEmoji: { fontSize: 36, marginBottom: 12 },
   erroText: { fontSize: 13, color: COLORS.textSecondary, textAlign: 'center', lineHeight: 20 },
-});
+  
+  // Advanced Analysis Styles
+  divider: {
+    height: 1,
+    backgroundColor: COLORS.border,
+    marginVertical: 20,
+    marginHorizontal: 16,
+  },
+  advancedSection: {
+    marginHorizontal: 16,
+    marginBottom: 12,
+  },
+  advancedHeader: {
+    marginBottom: 16,
+  },
+  advancedTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.textPrimary,
+    marginBottom: 4,
+  },
+  advancedSubtitle: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+  },
+  analysisSubtitle: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: COLORS.textPrimary,
+    marginBottom: 10,
+    marginTop: 12,
+  },
+  analysisGrid: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 10,
+  },
+  analysisCard: {
+    flex: 1,
+    flexDirection: 'row',
+    backgroundColor: COLORS.surface,
+    borderRadius: 10,
+    borderWidth: 0.5,
+    borderColor: COLORS.border,
+    padding: 10,
+    alignItems: 'flex-start',
+    gap: 10,
+  },
+  analysisIcon: {
+    fontSize: 20,
+    marginTop: 2,
+  },
+  analysisLabel: {
+    fontSize: 10,
+    color: COLORS.textSecondary,
+    marginBottom: 2,
+  },
+  analysisValue: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  analysisUnit: {
+    fontSize: 9,
+    color: COLORS.textMuted,
+  },
+  anomalyAlert: {
+    backgroundColor: COLORS.dangerLight,
+    borderRadius: 8,
+    padding: 10,
+    marginVertical: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: COLORS.danger,
+  },

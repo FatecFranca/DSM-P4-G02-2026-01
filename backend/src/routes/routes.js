@@ -370,4 +370,25 @@ routes.post('/vitals', SinalVitalController.store);
  */
 routes.get('/vitals', SinalVitalController.index);
 
+/**
+ * @swagger
+ * /analytics/{babyId}:
+ *   get:
+ *     summary: Retorna análises estatísticas avançadas
+ *     description: Busca dados calculados pelos scripts Python (média, moda, desvio padrão) para um bebê.
+ *     parameters:
+ *       - in: path
+ *         name: babyId
+ *         required: true
+ *         description: "O identificador do bebê (ex: Prematuro_01)"
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Análises avançadas retornadas com sucesso.
+ *       404:
+ *         description: Dados analíticos não disponíveis para este bebê.
+ */
+routes.get('/analytics/:bebeId', EstatisticaController.analyticsAvancadas);
+
 module.exports = routes;

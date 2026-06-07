@@ -1,0 +1,10 @@
+# Dependências Python para scripts de análise estatística
+# Compatível com Python 3.8+
+
+requests>=2.31.0
+numpy>=1.26.0
+pandas>=2.1.0
+scipy>=1.11.0
+pylint>=3.0.0
+black>=23.9.0
+pytest>=7.4.0
