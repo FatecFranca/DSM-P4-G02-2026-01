@@ -7,6 +7,7 @@ import { useStore } from '../../hooks/useStore';
 import { fetchEstatisticasDia, fetchHistoricoHoras } from '../../services/api';
 import { LineChart } from 'react-native-chart-kit';
 import { Dimensions } from 'react-native';
+import { format } from 'date-fns';
 
 const W = Dimensions.get('window').width;
 
@@ -20,10 +21,12 @@ function StatCard({ label, value, sub, cor }: { label: string; value: string; su
   );
 }
 
-function RangeBar({ min, max, absMin, absMax, color }: { min: number; max: number; absMin: number; absMax: number; color: string }) {
+function RangeBar({ min, max, absMin, absMax, color }: {
+  min: number; max: number; absMin: number; absMax: number; color: string;
+}) {
   const range = absMax - absMin || 1;
-  const left = ((min - absMin) / range) * 100;
-  const width = ((max - min) / range) * 100;
+  const left = Math.max(0, ((min - absMin) / range) * 100);
+  const width = Math.max(5, ((max - min) / range) * 100);
   return (
     <View style={styles.rangeBar}>
       <View style={[styles.rangeFill, { marginLeft: `${left}%` as any, width: `${width}%` as any, backgroundColor: color }]} />
@@ -33,26 +36,31 @@ function RangeBar({ min, max, absMin, absMax, color }: { min: number; max: numbe
 
 export default function EstatisticasScreen() {
   const insets = useSafeAreaInsets();
+  // ✅ corrigido: babyId (não bebeId)
   const { babyId, estatisticas, historicoHoras, setEstatisticas, setHistoricoHoras } = useStore();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
 
   const carregar = useCallback(async () => {
     if (!babyId) return;
+    setErro(null);
     try {
+      const hoje = format(new Date(), 'yyyy-MM-dd');
       const [stats, horas] = await Promise.all([
-        fetchEstatisticasDia(babyId),
+        fetchEstatisticasDia(babyId, hoje),
         fetchHistoricoHoras(babyId, 12),
       ]);
       setEstatisticas(stats);
       setHistoricoHoras(horas);
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      console.error('Erro estatísticas:', err?.response?.data ?? err.message);
+      setErro('Sem dados para hoje. Envie coletas pelo Postman para visualizar.');
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [bebeId]);
+  }, [babyId]);
 
   useEffect(() => { carregar(); }, [carregar]);
 
@@ -64,14 +72,20 @@ export default function EstatisticasScreen() {
     );
   }
 
+  // Labels formatados para o gráfico
+  const horasSlice = historicoHoras.slice(-6);
+  const labels = horasSlice.map((h) => {
+    try { return format(new Date(h.dataHora), 'HH:mm'); } catch { return '-'; }
+  });
+
   const bpmData = {
-    labels: historicoHoras.slice(-6).map((h) => h.dataHora),
-    datasets: [{ data: historicoHoras.slice(-6).map((h) => h.mediaBatimentos || 140) }],
+    labels: labels.length > 0 ? labels : ['--'],
+    datasets: [{ data: horasSlice.length > 0 ? horasSlice.map((h) => h.mediaBatimentos || 0) : [0] }],
   };
 
   const tempData = {
-    labels: historicoHoras.slice(-6).map((h) => h.dataHora),
-    datasets: [{ data: historicoHoras.slice(-6).map((h) => h.mediaTemperatura || 36.8) }],
+    labels: labels.length > 0 ? labels : ['--'],
+    datasets: [{ data: horasSlice.length > 0 ? horasSlice.map((h) => h.mediaTemperatura || 0) : [0] }],
   };
 
   const chartConfig = (color: string) => ({
@@ -86,79 +100,96 @@ export default function EstatisticasScreen() {
   return (
     <ScrollView
       style={[styles.container, { paddingTop: insets.top }]}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); carregar(); }} tintColor={COLORS.primary} />}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={() => { setRefreshing(true); carregar(); }}
+          tintColor={COLORS.primary}
+        />
+      }
     >
       <View style={styles.header}>
         <Text style={styles.headerSub}>Últimas 24 horas</Text>
         <Text style={styles.headerTitle}>Resumo do dia</Text>
       </View>
 
-      <View style={styles.statsGrid}>
-        <StatCard label="BPM médio" value={`${Math.round(estatisticas?.mediaBatimentos ?? 0)}`} sub="batimentos/min" />
-        <StatCard label="Temp. média" value={`${(estatisticas?.mediaTemperatura ?? 0).toFixed(1)}°C`} sub="graus Celsius" />
-        <StatCard label="Alertas" value={`${estatisticas?.totalAlertas ?? 0}`} sub="últimas 24h" cor={COLORS.primaryDark} />
-        <StatCard label="Coletas" value={`${estatisticas?.totalColetas ?? 0}`} sub="registros" cor={COLORS.success} />
-      </View>
-
-      {estatisticas && (
+      {erro ? (
+        <View style={styles.erroCard}>
+          <Text style={styles.erroEmoji}>📊</Text>
+          <Text style={styles.erroText}>{erro}</Text>
+        </View>
+      ) : (
         <>
-          <View style={styles.chartCard}>
-            <Text style={styles.sectionTitle}>Variação de BPM</Text>
-            <View style={styles.minMax}>
-              <Text style={styles.minMaxText}>Mín: {estatisticas.minBatimentos} bpm</Text>
-              <Text style={styles.minMaxText}>Máx: {estatisticas.maxBatimentos} bpm</Text>
-            </View>
-            <RangeBar
-              min={estatisticas.minBatimentos}
-              max={estatisticas.maxBatimentos}
-              absMin={VITAL_THRESHOLDS.heartRate.min - 20}
-              absMax={VITAL_THRESHOLDS.heartRate.max + 20}
-              color={COLORS.primary}
-            />
-            <View style={styles.rangeLabels}>
-              <Text style={styles.rangeLabelText}>{VITAL_THRESHOLDS.heartRate.min - 20}</Text>
-              <Text style={styles.rangeLabelText}>{VITAL_THRESHOLDS.heartRate.min}</Text>
-              <Text style={styles.rangeLabelText}>{VITAL_THRESHOLDS.heartRate.max}</Text>
-              <Text style={styles.rangeLabelText}>{VITAL_THRESHOLDS.heartRate.max + 20}</Text>
-            </View>
+          <View style={styles.statsGrid}>
+            <StatCard label="BPM médio" value={`${Math.round(estatisticas?.mediaBatimentos ?? 0)}`} sub="batimentos/min" />
+            <StatCard label="Temp. média" value={`${(estatisticas?.mediaTemperatura ?? 0).toFixed(1)}°C`} sub="graus Celsius" />
+            <StatCard label="Coletas" value={`${estatisticas?.totalColetas ?? 0}`} sub="registros" cor={COLORS.success} />
+            <StatCard label="Alertas" value={`${(estatisticas as any)?.totalAlertas ?? 0}`} sub="últimas 24h" cor={COLORS.primaryDark} />
           </View>
 
-          <View style={styles.chartCard}>
-            <Text style={styles.sectionTitle}>Variação de temperatura</Text>
-            <View style={styles.minMax}>
-              <Text style={styles.minMaxText}>Mín: {estatisticas.minTemperatura.toFixed(1)}°C</Text>
-              <Text style={styles.minMaxText}>Máx: {estatisticas.maxTemperatura.toFixed(1)}°C</Text>
-            </View>
-            <RangeBar
-              min={estatisticas.minTemperatura}
-              max={estatisticas.maxTemperatura}
-              absMin={35}
-              absMax={39}
-              color={COLORS.success}
-            />
-            <View style={styles.rangeLabels}>
-              {['35°', '36°', '37°', '38°', '39°'].map((l) => (
-                <Text key={l} style={styles.rangeLabelText}>{l}</Text>
-              ))}
-            </View>
-          </View>
-        </>
-      )}
+          {estatisticas && (
+            <>
+              <View style={styles.chartCard}>
+                <Text style={styles.sectionTitle}>Variação de BPM</Text>
+                <View style={styles.minMax}>
+                  <Text style={styles.minMaxText}>Mín: {estatisticas.minBatimentos} bpm</Text>
+                  <Text style={styles.minMaxText}>Máx: {estatisticas.maxBatimentos} bpm</Text>
+                </View>
+                <RangeBar
+                  min={estatisticas.minBatimentos}
+                  max={estatisticas.maxBatimentos}
+                  absMin={VITAL_THRESHOLDS.heartRate.min - 20}
+                  absMax={VITAL_THRESHOLDS.heartRate.max + 20}
+                  color={COLORS.primary}
+                />
+                <View style={styles.rangeLabels}>
+                  <Text style={styles.rangeLabelText}>{VITAL_THRESHOLDS.heartRate.min - 20}</Text>
+                  <Text style={styles.rangeLabelText}>{VITAL_THRESHOLDS.heartRate.min}</Text>
+                  <Text style={styles.rangeLabelText}>{VITAL_THRESHOLDS.heartRate.max}</Text>
+                  <Text style={styles.rangeLabelText}>{VITAL_THRESHOLDS.heartRate.max + 20}</Text>
+                </View>
+              </View>
 
-      {historicoHoras.length > 0 && (
-        <>
-          <View style={styles.chartCard}>
-            <Text style={styles.sectionTitle}>BPM por hora</Text>
-            <LineChart data={bpmData} width={W - 64} height={140}
-              chartConfig={chartConfig(COLORS.primary)} bezier withInnerLines={false} withOuterLines={false}
-              style={{ borderRadius: 8 }} />
-          </View>
-          <View style={[styles.chartCard, { marginBottom: 28 }]}>
-            <Text style={styles.sectionTitle}>Temperatura por hora</Text>
-            <LineChart data={tempData} width={W - 64} height={140}
-              chartConfig={chartConfig(COLORS.success)} bezier withInnerLines={false} withOuterLines={false}
-              style={{ borderRadius: 8 }} />
-          </View>
+              <View style={styles.chartCard}>
+                <Text style={styles.sectionTitle}>Variação de temperatura</Text>
+                <View style={styles.minMax}>
+                  <Text style={styles.minMaxText}>Mín: {estatisticas.minTemperatura.toFixed(1)}°C</Text>
+                  <Text style={styles.minMaxText}>Máx: {estatisticas.maxTemperatura.toFixed(1)}°C</Text>
+                </View>
+                <RangeBar
+                  min={estatisticas.minTemperatura}
+                  max={estatisticas.maxTemperatura}
+                  absMin={35}
+                  absMax={39}
+                  color={COLORS.success}
+                />
+                <View style={styles.rangeLabels}>
+                  {['35°', '36°', '37°', '38°', '39°'].map((l) => (
+                    <Text key={l} style={styles.rangeLabelText}>{l}</Text>
+                  ))}
+                </View>
+              </View>
+            </>
+          )}
+
+          {horasSlice.length > 0 && (
+            <>
+              <View style={styles.chartCard}>
+                <Text style={styles.sectionTitle}>BPM por hora</Text>
+                <LineChart data={bpmData} width={W - 64} height={140}
+                  chartConfig={chartConfig(COLORS.primary)} bezier
+                  withInnerLines={false} withOuterLines={false}
+                  style={{ borderRadius: 8 }} />
+              </View>
+              <View style={[styles.chartCard, { marginBottom: 28 }]}>
+                <Text style={styles.sectionTitle}>Temperatura por hora</Text>
+                <LineChart data={tempData} width={W - 64} height={140}
+                  chartConfig={chartConfig(COLORS.success)} bezier
+                  withInnerLines={false} withOuterLines={false}
+                  style={{ borderRadius: 8 }} />
+              </View>
+            </>
+          )}
         </>
       )}
     </ScrollView>
@@ -190,4 +221,11 @@ const styles = StyleSheet.create({
   rangeFill: { height: '100%', borderRadius: 4 },
   rangeLabels: { flexDirection: 'row', justifyContent: 'space-between' },
   rangeLabelText: { fontSize: 9, color: COLORS.textMuted },
+  erroCard: {
+    marginHorizontal: 16, marginTop: 20, padding: 24,
+    backgroundColor: COLORS.surface, borderRadius: 14,
+    borderWidth: 0.5, borderColor: COLORS.border, alignItems: 'center',
+  },
+  erroEmoji: { fontSize: 36, marginBottom: 12 },
+  erroText: { fontSize: 13, color: COLORS.textSecondary, textAlign: 'center', lineHeight: 20 },
 });

@@ -5,8 +5,6 @@ import { useState } from 'react';
 import { router } from 'expo-router';
 import { COLORS, VITAL_THRESHOLDS } from '../../constants';
 import { useStore } from '../../hooks/useStore';
-import { format, differenceInWeeks } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 
 function InfoRow({ label, value, icon }: { label: string; value: string; icon: string }) {
   return (
@@ -35,14 +33,10 @@ function ToggleRow({ label, icon, value, onChange }: {
 
 export default function PerfilScreen() {
   const insets = useSafeAreaInsets();
-  const { bebe, isConectado, logout } = useStore();
+  const { bebe, babyId, isConectado, logout } = useStore();
   const [notifTemp, setNotifTemp] = useState(true);
   const [notifBpm, setNotifBpm] = useState(true);
   const [notifPush, setNotifPush] = useState(true);
-
-  const idadeGestacional = bebe
-    ? `${differenceInWeeks(new Date(), new Date(bebe.dataNascimento)) + bebe.semanasGestacao} semanas`
-    : '-';
 
   const handleLogout = () => {
     Alert.alert('Sair', 'Deseja encerrar a sessão?', [
@@ -69,25 +63,19 @@ export default function PerfilScreen() {
         </View>
         <View style={{ flex: 1 }}>
           <Text style={styles.babyName}>{bebe?.nome ?? 'Bebê'}</Text>
-          <Text style={styles.babySub}>
-            Nascida em {bebe ? format(new Date(bebe.dataNascimento), 'dd/MM/yyyy', { locale: ptBR }) : '-'}
-          </Text>
+          <Text style={styles.babySub}>ID: {babyId ?? '-'}</Text>
           <View style={styles.badge}>
-            <Text style={styles.badgeText}>
-              {bebe?.leito ? `Leito ${bebe.leito}` : 'UTI Neonatal'}
-            </Text>
+            <Text style={styles.badgeText}>UTI Neonatal</Text>
           </View>
         </View>
         <View style={[styles.connDot, { backgroundColor: isConectado ? COLORS.success : COLORS.textMuted }]} />
       </View>
 
-      <Text style={styles.sectionTitle}>Informações clínicas</Text>
+      <Text style={styles.sectionTitle}>Limites vitais monitorados</Text>
       <View style={styles.card}>
-        <InfoRow label="Peso atual" value={bebe?.peso ? `${bebe.peso}g` : '-'} icon="⚖️" />
-        <InfoRow label="Comprimento" value={bebe?.comprimento ? `${bebe.comprimento} cm` : '-'} icon="📏" />
-        <InfoRow label="Idade gestacional" value={idadeGestacional} icon="🗓️" />
         <InfoRow label="BPM normal" value={`${VITAL_THRESHOLDS.heartRate.min}–${VITAL_THRESHOLDS.heartRate.max} bpm`} icon="💓" />
         <InfoRow label="Temp. normal" value={`${VITAL_THRESHOLDS.temperature.min}–${VITAL_THRESHOLDS.temperature.max}°C`} icon="🌡️" />
+        <InfoRow label="ID do bebê" value={babyId ?? '-'} icon="🏷️" />
       </View>
 
       <Text style={styles.sectionTitle}>Notificações</Text>

@@ -5,19 +5,28 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { registrarNotificacoes, salvarTokenNoBackend } from '../services/notifications';
 import { useStore } from '../hooks/useStore';
+import { router } from 'expo-router';
 
 export default function RootLayout() {
-  const { bebeId } = useStore();
+  const { token, babyId } = useStore();
+
+  useEffect(() => {
+    if (token && babyId) {
+      router.replace('/(tabs)');
+    } else {
+      router.replace('/');
+    }
+  }, [token]);
 
   useEffect(() => {
     const setupPush = async () => {
-      const token = await registrarNotificacoes();
-      if (token && bebeId) {
-        await salvarTokenNoBackend(bebeId, token);
+      const pushToken = await registrarNotificacoes();
+      if (pushToken && babyId) {
+        await salvarTokenNoBackend(babyId, pushToken);
       }
     };
     setupPush();
-  }, [bebeId]);
+  }, [babyId]);
 
   return (
     <SafeAreaProvider>
