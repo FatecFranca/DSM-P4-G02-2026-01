@@ -8,6 +8,10 @@ buildscript {
         targetSdkVersion = Integer.parseInt(findProperty('android.targetSdkVersion') ?: '34')
         kotlinVersion = findProperty('android.kotlinVersion') ?: '1.9.25'
 
+        // Versions for Gradle plugins (provide via gradle.properties to override)
+        androidGradlePluginVersion = findProperty('android.gradlePluginVersion') ?: '8.3.2'
+        reactNativeGradlePluginVersion = findProperty('reactNative.gradlePluginVersion') ?: '0.71.11'
+
         ndkVersion = "26.1.10909125"
     }
     repositories {
@@ -15,9 +19,9 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath('com.android.tools.build:gradle')
-        classpath('com.facebook.react:react-native-gradle-plugin')
-        classpath('org.jetbrains.kotlin:kotlin-gradle-plugin')
+        classpath("com.android.tools.build:gradle:${androidGradlePluginVersion}")
+        classpath("com.facebook.react:react-native-gradle-plugin:${reactNativeGradlePluginVersion}")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${kotlinVersion}")
     }
 }
 

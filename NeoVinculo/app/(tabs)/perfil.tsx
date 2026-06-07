@@ -101,6 +101,10 @@ export default function PerfilScreen() {
         <Text style={styles.logoutText}>Sair da conta</Text>
       </TouchableOpacity>
 
+      <TouchableOpacity style={styles.loginBtn} onPress={() => router.replace('/')}> 
+        <Text style={styles.loginText}>Voltar para login</Text>
+      </TouchableOpacity>
+
       <View style={{ height: 28 }} />
     </ScrollView>
   );
@@ -144,5 +148,10 @@ const styles = StyleSheet.create({
     marginHorizontal: 16, padding: 14, borderRadius: 12,
     borderWidth: 0.5, borderColor: COLORS.primaryMid, alignItems: 'center',
   },
+  loginBtn: {
+    marginHorizontal: 16, padding: 14, borderRadius: 12,
+    backgroundColor: COLORS.primary, alignItems: 'center', marginTop: 12,
+  },
+  loginText: { fontSize: 14, color: '#fff', fontWeight: '600' },
   logoutText: { fontSize: 14, color: COLORS.primaryDark, fontWeight: '500' },
 });
