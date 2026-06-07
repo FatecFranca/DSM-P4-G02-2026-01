@@ -111,23 +111,18 @@ export const fetchHistoricoHoras = async (
   return res.data;
 };
 
+export const fetchAnalyticsAvancadas = async (
+  babyId: string
+) => {
+  const res = await api.get(`/analytics/${babyId}`);
+  return res.data;
+};
+
 // ---- Sinais vitais diretos do IoT (rota extra do seu backend) ----
 
 export const fetchVitais = async (babyId: string) => {
   const res = await api.get(`/vitals/${babyId}`);
   return res.data;
-};
-
-// ---- Análises Avançadas (Scripts Python) ----
-
-export const fetchAnalyticsAvancadas = async (babyId: string) => {
-  try {
-    const res = await api.get(`/analytics/${babyId}`);
-    return res.data;
-  } catch (error) {
-    console.warn('Análises avançadas não disponíveis:', error);
-    return null;
-  }
 };
 
 export default api;

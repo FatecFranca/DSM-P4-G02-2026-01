@@ -389,28 +389,6 @@ routes.get('/vitals', SinalVitalController.index);
  *       404:
  *         description: Dados analíticos não disponíveis para este bebê.
  */
-routes.get('/analytics/:babyId', (req, res) => {
-  const { babyId } = req.params;
-  const path = require('path');
-  const fs = require('fs');
-  
-  try {
-    // Tenta ler o arquivo JSON gerado pelos scripts Python
-    const analyticsPath = path.join(__dirname, '../../..', 'analytics-scripts', 'output', `analytics_${babyId}.json`);
-    
-    if (!fs.existsSync(analyticsPath)) {
-      return res.status(404).json({ 
-        erro: 'Dados analíticos não disponíveis. Execute os scripts Python primeiro.' 
-      });
-    }
-
-    const dados = JSON.parse(fs.readFileSync(analyticsPath, 'utf-8'));
-    return res.json(dados);
-
-  } catch (error) {
-    console.error('Erro ao buscar analytics:', error);
-    return res.status(500).json({ erro: 'Erro ao buscar dados analíticos.' });
-  }
-});
+routes.get('/analytics/:bebeId', EstatisticaController.analyticsAvancadas);
 
 module.exports = routes;

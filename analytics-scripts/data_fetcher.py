@@ -1,4 +1,3 @@
-# data_fetcher.py
 """
 Módulo para buscar dados de sinais vitais da API backend
 """
@@ -41,10 +40,10 @@ class DataFetcher:
         try:
             url = f"{self.base_url}/vitals/{baby_id}"
             logger.info(f"Buscando sinais vitais de {baby_id}...")
-            
+
             response = self.session.get(url, timeout=self.timeout)
             response.raise_for_status()
-            
+
             data = response.json()
             logger.info(f"✓ Obtidos {len(data)} registros de {baby_id}")
             return data
@@ -73,10 +72,10 @@ class DataFetcher:
         try:
             url = f"{self.base_url}/vitals"
             logger.info("Buscando todos os sinais vitais...")
-            
+
             response = self.session.get(url, timeout=self.timeout)
             response.raise_for_status()
-            
+
             data = response.json()
             logger.info(f"✓ Obtidos {len(data)} registros no total")
             return data
@@ -101,10 +100,10 @@ class DataFetcher:
             url = f"{self.base_url}/estatisticas/{baby_id}/dia"
             params = {"data": data}
             logger.info(f"Buscando estatísticas de {baby_id} para {data}...")
-            
+
             response = self.session.get(url, params=params, timeout=self.timeout)
             response.raise_for_status()
-            
+
             data = response.json()
             logger.info(f"✓ Estatísticas obtidas com sucesso")
             return data
@@ -129,10 +128,10 @@ class DataFetcher:
             url = f"{self.base_url}/estatisticas/{baby_id}/horas"
             params = {"horas": horas}
             logger.info(f"Buscando histórico de {horas}h para {baby_id}...")
-            
+
             response = self.session.get(url, params=params, timeout=self.timeout)
             response.raise_for_status()
-            
+
             data = response.json()
             logger.info(f"✓ Histórico obtido: {len(data)} períodos")
             return data
@@ -156,18 +155,14 @@ class DataFetcher:
 
         for vital in vitals:
             try:
-                # Verificar campos obrigatórios
                 assert "babyId" in vital
                 assert "batimentos" in vital
                 assert "temperatura" in vital
                 assert "dataHora" in vital
-
-                # Verificar tipos
                 assert isinstance(vital["batimentos"], (int, float))
                 assert isinstance(vital["temperatura"], (int, float))
                 assert vital["batimentos"] > 0
                 assert vital["temperatura"] > 0
-
                 validos.append(vital)
             except (AssertionError, KeyError):
                 invalidos += 1
@@ -205,7 +200,6 @@ def obter_dados_baby(baby_id: str) -> Optional[List[Dict]]:
 
 
 if __name__ == "__main__":
-    # Teste
     fetcher = DataFetcher()
     vitals = fetcher.fetch_vitals_by_baby("Prematuro_01")
     if vitals:

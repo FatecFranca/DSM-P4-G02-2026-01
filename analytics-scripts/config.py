@@ -1,4 +1,3 @@
-# config.py
 """
 Configurações centralizadas para scripts de análise estatística
 """
