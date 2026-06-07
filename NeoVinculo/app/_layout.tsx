@@ -1,11 +1,10 @@
 // app/_layout.tsx
 import { useEffect } from 'react';
-import { Stack } from 'expo-router';
+import { Stack, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { registrarNotificacoes, salvarTokenNoBackend } from '../services/notifications';
 import { useStore } from '../hooks/useStore';
-import { router } from 'expo-router';
 
 export default function RootLayout() {
   const { token, babyId } = useStore();
@@ -13,10 +12,8 @@ export default function RootLayout() {
   useEffect(() => {
     if (token && babyId) {
       router.replace('/(tabs)');
-    } else {
-      router.replace('/');
     }
-  }, [token]);
+  }, [token, babyId]);
 
   useEffect(() => {
     const setupPush = async () => {
@@ -31,7 +28,10 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <StatusBar style="dark" backgroundColor="#FFF9F5" />
-      <Stack screenOptions={{ headerShown: false }} />
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" />
+        <Stack.Screen name="(tabs)" />
+      </Stack>
     </SafeAreaProvider>
   );
 }
