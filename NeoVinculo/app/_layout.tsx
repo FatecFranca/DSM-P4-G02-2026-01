@@ -12,6 +12,8 @@ export default function RootLayout() {
   useEffect(() => {
     if (token && babyId) {
       router.replace('/(tabs)');
+    } else {
+      router.replace('/');
     }
   }, [token, babyId]);
 

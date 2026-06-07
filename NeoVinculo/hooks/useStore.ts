@@ -1,5 +1,7 @@
 // hooks/useStore.ts
 import { create } from 'zustand';
+import { createJSONStorage, persist } from 'zustand/middleware';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Bebe, Coleta, EstatisticasDia, HistoricoHora } from '../services/api';
 
 type Alerta = {
@@ -11,72 +13,81 @@ type Alerta = {
 };
 
 type AppState = {
-  // Auth
   token: string | null;
-  babyId: string | null;          // usa babyId igual ao backend (ex: "Prematuro_01")
+  babyId: string | null;
+  bebe: Bebe | null;
   setAuth: (token: string, babyId: string) => void;
   logout: () => void;
-
-  // Dados do bebê
-  bebe: Bebe | null;
   setBebe: (b: Bebe) => void;
 
-  // Vitais em tempo real
   ultimaColeta: Coleta | null;
   coletasRecentes: Coleta[];
   setUltimaColeta: (c: Coleta) => void;
   adicionarColeta: (c: Coleta) => void;
 
-  // Estatísticas
   estatisticas: EstatisticasDia | null;
   historicoHoras: HistoricoHora[];
   setEstatisticas: (e: EstatisticasDia) => void;
   setHistoricoHoras: (h: HistoricoHora[]) => void;
 
-  // Alertas
   alertas: Alerta[];
   adicionarAlerta: (a: Alerta) => void;
   limparAlertas: () => void;
 
-  // Conexão
   isConectado: boolean;
   setConectado: (v: boolean) => void;
 };
 
-export const useStore = create<AppState>((set) => ({
-  token: null,
-  babyId: null,
-  setAuth: (token, babyId) => {
-    global.__authToken = token;
-    set({ token, babyId });
-  },
-  logout: () => {
-    global.__authToken = undefined;
-    set({ token: null, babyId: null, bebe: null, ultimaColeta: null, coletasRecentes: [], alertas: [] });
-  },
+export const useStore = create<AppState>()(
+  persist(
+    (set) => ({
+      token: null,
+      babyId: null,
+      bebe: null,
+      setAuth: (token, babyId) => {
+        global.__authToken = token;
+        set({ token, babyId });
+      },
+      logout: () => {
+        global.__authToken = undefined;
+        set({
+          token: null, babyId: null, bebe: null,
+          ultimaColeta: null, coletasRecentes: [], alertas: [],
+        });
+      },
+      setBebe: (bebe) => set({ bebe }),
 
-  bebe: null,
-  setBebe: (bebe) => set({ bebe }),
+      ultimaColeta: null,
+      coletasRecentes: [],
+      setUltimaColeta: (c) => set({ ultimaColeta: c }),
+      adicionarColeta: (c) =>
+        set((state) => ({
+          ultimaColeta: c,
+          coletasRecentes: [c, ...state.coletasRecentes].slice(0, 50),
+        })),
 
-  ultimaColeta: null,
-  coletasRecentes: [],
-  setUltimaColeta: (c) => set({ ultimaColeta: c }),
-  adicionarColeta: (c) =>
-    set((state) => ({
-      ultimaColeta: c,
-      coletasRecentes: [c, ...state.coletasRecentes].slice(0, 50),
-    })),
+      estatisticas: null,
+      historicoHoras: [],
+      setEstatisticas: (estatisticas) => set({ estatisticas }),
+      setHistoricoHoras: (historicoHoras) => set({ historicoHoras }),
 
-  estatisticas: null,
-  historicoHoras: [],
-  setEstatisticas: (estatisticas) => set({ estatisticas }),
-  setHistoricoHoras: (historicoHoras) => set({ historicoHoras }),
+      alertas: [],
+      adicionarAlerta: (a) =>
+        set((state) => ({ alertas: [a, ...state.alertas].slice(0, 20) })),
+      limparAlertas: () => set({ alertas: [] }),
 
-  alertas: [],
-  adicionarAlerta: (a) =>
-    set((state) => ({ alertas: [a, ...state.alertas].slice(0, 20) })),
-  limparAlertas: () => set({ alertas: [] }),
-
-  isConectado: false,
-  setConectado: (isConectado) => set({ isConectado }),
-}));
+      isConectado: false,
+      setConectado: (isConectado) => set({ isConectado }),
+    }),
+    {
+      name: 'baby-monitor-storage',
+      storage: createJSONStorage(() => AsyncStorage),
+      // Persiste apenas auth e bebe — o resto recarrega do backend
+      partialize: (state) => ({
+        token: state.token,
+        babyId: state.babyId,
+        bebe: state.bebe,
+      }),
+    }
+  )
+);
