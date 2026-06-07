@@ -15,6 +15,11 @@ function ColetaItem({ item }: { item: Coleta }) {
     item.batimentos <= VITAL_THRESHOLDS.heartRate.max;
   const normal = tempNormal && bpmNormal;
 
+  let horaFormatada = '-';
+  try {
+    horaFormatada = format(new Date(item.dataHora), 'HH:mm:ss', { locale: ptBR });
+  } catch {}
+
   return (
     <View style={styles.item}>
       <View style={[styles.dot, { backgroundColor: normal ? COLORS.success : COLORS.primary }]} />
@@ -23,17 +28,15 @@ function ColetaItem({ item }: { item: Coleta }) {
           <Text style={styles.itemTitle}>
             {normal ? 'Sinais normais' : '⚠️ Fora do normal'}
           </Text>
-          <Text style={styles.itemTime}>
-            {format(new Date(item.dataHora), 'HH:mm:ss', { locale: ptBR })}
-          </Text>
+          <Text style={styles.itemTime}>{horaFormatada}</Text>
         </View>
         <Text style={styles.itemVals}>
-          🌡️ {item.temperatura.toFixed(1)}°C  ·  💓 {item.batimentos} bpm
+          🌡️ {item.temperatura?.toFixed(1)}°C  ·  💓 {item.batimentos} bpm
         </Text>
         {(!tempNormal || !bpmNormal) && (
           <Text style={styles.itemWarn}>
-            {!tempNormal ? `Temp. ${tempNormal ? 'OK' : 'anormal'}` : ''}
-            {!bpmNormal ? ` BPM ${bpmNormal ? 'OK' : 'anormal'}` : ''}
+            {!tempNormal ? 'Temperatura anormal  ' : ''}
+            {!bpmNormal ? 'BPM anormal' : ''}
           </Text>
         )}
       </View>
@@ -43,22 +46,28 @@ function ColetaItem({ item }: { item: Coleta }) {
 
 export default function ColetasScreen() {
   const insets = useSafeAreaInsets();
-  const { bebeId, coletasRecentes, adicionarColeta } = useStore();
+  const { babyId, coletasRecentes, adicionarColeta } = useStore();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
 
   const carregar = useCallback(async () => {
-    if (!babyId) return;
+    if (!babyId) {
+      setLoading(false);
+      return;
+    }
+    setErro(null);
     try {
       const coletas = await fetchColetasRecentes(babyId, 30);
       coletas.forEach(adicionarColeta);
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      console.error('Erro coletas:', err?.response?.data ?? err.message);
+      setErro('Não foi possível carregar as coletas.');
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [bebeId]);
+  }, [babyId]);
 
   useEffect(() => { carregar(); }, [carregar]);
 
@@ -66,6 +75,7 @@ export default function ColetasScreen() {
     return (
       <View style={[styles.center, { paddingTop: insets.top }]}>
         <ActivityIndicator color={COLORS.primary} size="large" />
+        <Text style={styles.loadingText}>Carregando coletas...</Text>
       </View>
     );
   }
@@ -89,7 +99,15 @@ export default function ColetasScreen() {
           />
         }
         ListEmptyComponent={
-          <Text style={styles.empty}>Nenhuma coleta registrada ainda.</Text>
+          <View style={styles.emptyCard}>
+            <Text style={styles.emptyEmoji}>📋</Text>
+            <Text style={styles.emptyTitle}>
+              {erro ?? 'Nenhuma coleta ainda'}
+            </Text>
+            <Text style={styles.emptySub}>
+              Envie dados via POST /vitals para visualizar as coletas aqui.
+            </Text>
+          </View>
         }
       />
     </View>
@@ -98,7 +116,8 @@ export default function ColetasScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
-  center: { flex: 1, backgroundColor: COLORS.background, justifyContent: 'center', alignItems: 'center' },
+  center: { flex: 1, backgroundColor: COLORS.background, justifyContent: 'center', alignItems: 'center', gap: 12 },
+  loadingText: { fontSize: 13, color: COLORS.textSecondary },
   header: { padding: 20, paddingBottom: 12 },
   headerSub: { fontSize: 13, color: COLORS.textSecondary },
   headerTitle: { fontSize: 20, fontWeight: '600', color: COLORS.textPrimary },
@@ -113,5 +132,12 @@ const styles = StyleSheet.create({
   itemTime: { fontSize: 11, color: COLORS.textMuted },
   itemVals: { fontSize: 12, color: COLORS.textSecondary },
   itemWarn: { fontSize: 11, color: COLORS.primaryDark, marginTop: 2 },
-  empty: { textAlign: 'center', color: COLORS.textMuted, marginTop: 40, fontSize: 14 },
+  emptyCard: {
+    marginTop: 40, alignItems: 'center', padding: 24,
+    backgroundColor: COLORS.surface, borderRadius: 14,
+    borderWidth: 0.5, borderColor: COLORS.border,
+  },
+  emptyEmoji: { fontSize: 36, marginBottom: 12 },
+  emptyTitle: { fontSize: 14, fontWeight: '500', color: COLORS.textPrimary, marginBottom: 6 },
+  emptySub: { fontSize: 12, color: COLORS.textSecondary, textAlign: 'center', lineHeight: 18 },
 });
