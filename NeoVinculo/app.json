@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Baby Monitor",
-    "slug": "baby-monitor",
+    "name": "NeoVinculo",
+    "slug": "neovinculo",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/adaptive-icon.png",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
@@ -16,13 +16,13 @@
     ],
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.anajuliafr.babymonitor",
+      "bundleIdentifier": "com.anajuliafrodrigues.neovinculo",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
-      "package": "com.anajuliafr.babymonitor",
+      "package": "com.anajuliafrodrigues.neovinculo",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
@@ -39,7 +39,7 @@
       "expo-font",
       "expo-asset"
     ],
-    "scheme": "baby-monitor",
+    "scheme": "neovinculo",
     "experiments": {
       "typedRoutes": true
     },
@@ -48,7 +48,7 @@
         "origin": false
       },
       "eas": {
-        "projectId": "995c46ef-69ec-4e0f-946e-9b5382006a17"
+        "projectId": "b390c92a-4576-4d2c-b839-94fbfec9c2e7"
       }
     }
   }
