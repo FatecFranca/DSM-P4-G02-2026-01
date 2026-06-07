@@ -118,16 +118,4 @@ export const fetchVitais = async (babyId: string) => {
   return res.data;
 };
 
-// ---- Análises Avançadas (Scripts Python) ----
-
-export const fetchAnalyticsAvancadas = async (babyId: string) => {
-  try {
-    const res = await api.get(`/analytics/${babyId}`);
-    return res.data;
-  } catch (error) {
-    console.warn('Análises avançadas não disponíveis:', error);
-    return null;
-  }
-};
-
 export default api;
