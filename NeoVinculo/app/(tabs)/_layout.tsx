@@ -20,7 +20,7 @@ export default function TabsLayout() {
           paddingBottom: 6,
           height: 58,
         },
-        tabBarLabelStyle: { fontSize: 10, marginTop: 2 },
+        tabBarLabelStyle: { fontSize: 12, marginTop: 2 },
       }}
     >
       <Tabs.Screen
