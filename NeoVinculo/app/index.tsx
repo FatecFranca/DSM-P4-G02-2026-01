@@ -40,7 +40,7 @@ export default function LoginScreen() {
     >
       <View style={styles.header}>
         <Text style={styles.emoji}>🍼</Text>
-        <Text style={styles.title}>Baby Monitor</Text>
+        <Text style={styles.title}>NeoVinculo</Text>
         <Text style={styles.subtitle}>Acompanhe seu bebê de onde estiver</Text>
       </View>
 

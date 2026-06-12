@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> NeoVínculo - Dashboard PI</title>
+    <title>NeoVínculo - Dashboard PI</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="bg-slate-50 font-sans">
 
@@ -17,6 +18,7 @@
     </nav>
 
     <main class="container mx-auto p-6">
+        
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                 <div class="flex justify-between items-start">
@@ -55,82 +57,194 @@
             </div>
         </div>
 
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                <h3 class="text-md font-bold text-slate-700 mb-4"><i class="fa-solid fa-chart-line text-orange-500 mr-2"></i>Tendência de Temperatura (°C)</h3>
+                <div class="relative h-64">
+                    <canvas id="chart-temp"></canvas>
+                </div>
+            </div>
+            
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                <h3 class="text-md font-bold text-slate-700 mb-4"><i class="fa-solid fa-chart-line text-rose-500 mr-2"></i>Histórico de Frequência Cardíaca (BPM)</h3>
+                <div class="relative h-64">
+                    <canvas id="chart-bpm"></canvas>
+                </div>
+            </div>
+        </div>
+
         <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
             <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-    <h3 class="text-lg font-bold text-slate-800">Histórico de Coleta</h3>
-    
-    <div class="flex items-center gap-4">
-        <label for="filtro-bebe" class="text-sm font-medium text-slate-600">Filtrar por Bebê:</label>
-        <select id="filtro-bebe" onchange="buscarDados()" class="border border-slate-300 rounded-lg text-sm p-2 text-slate-700 focus:outline-none focus:border-sky-500">
-            <option value="todos">Todos (Visão ONG)</option>
-            <option value="Prematuro_01">Prematuro_01 (Mãe 1)</option>
-            <option value="Prematuro_02">Prematuro_02 (Mãe 2)</option>
-        </select>
-        
-        <button onclick="buscarDados()" class="text-sky-600 hover:text-sky-700 text-sm font-medium ml-4">
-            <i class="fa-solid fa-rotate mr-1"></i> Atualizar
-        </button>
-    </div>
-</div>
-            <table class="w-full text-left">
-                <thead class="bg-slate-50 text-slate-500 uppercase text-xs">
-                    <tr>
-                        <th class="px-6 py-4">Data/Hora</th>
-                        <th class="px-6 py-4">Bebê ID</th>
-                        <th class="px-6 py-4">Temperatura</th>
-                        <th class="px-6 py-4">Batimentos</th>
-                    </tr>
-                </thead>
-                <tbody id="logs-table" class="divide-y divide-slate-100">
+                <h3 class="text-lg font-bold text-slate-800">Histórico de Coleta</h3>
+                
+                <div class="flex items-center gap-4">
+                    <label for="filtro-bebe" class="text-sm font-medium text-slate-600">Filtrar por Bebê:</label>
+                    <select id="filtro-bebe" onchange="buscarDados()" class="border border-slate-300 rounded-lg text-sm p-2 text-slate-700 focus:outline-none focus:border-sky-500">
+                        <option value="todos">Todos (Visão ONG)</option>
+                        <option value="Prematuro_01">Prematuro_01 (Mãe 1)</option>
+                        <option value="Prematuro_02">Prematuro_02 (Mãe 2)</option>
+                    </select>
+                    
+                    <button onclick="buscarDados()" class="text-sky-600 hover:text-sky-700 text-sm font-medium ml-4">
+                        <i class="fa-solid fa-rotate mr-1"></i> Atualizar
+                    </button>
+                </div>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead class="bg-slate-50 text-slate-500 uppercase text-xs">
+                        <tr>
+                            <th class="px-6 py-4">Data/Hora</th>
+                            <th class="px-6 py-4">Bebê ID</th>
+                            <th class="px-6 py-4">Temperatura</th>
+                            <th class="px-6 py-4">Batimentos</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logs-table" class="divide-y divide-slate-100">
                     </tbody>
-            </table>
+                </table>
+            </div>
         </div>
     </main>
 
     <script>
+        // Variáveis globais para armazenar as instâncias dos gráficos
+        let chartTempInstance = null;
+        let chartBpmInstance = null;
+
+        // Função para inicializar ou atualizar os gráficos do Chart.js
+        function atualizarGraficos(dados) {
+            // Inverte o array para exibir a linha cronologicamente (da esquerda para a direita)
+            // Limitando aos últimos 15 registros para não sobrecarregar visualmente
+            const dadosGrafico = [...dados].slice(0, 15).reverse();
+
+            const labels = dadosGrafico.map(log => new Date(log.dataHora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
+            const dadosTemp = dadosGrafico.map(log => log.temperatura);
+            const dadosBpm = dadosGrafico.map(log => log.batimentos);
+
+            // 1. Gráfico de Temperatura
+            const ctxTemp = document.getElementById('chart-temp').getContext('2d');
+            if (chartTempInstance) {
+                chartTempInstance.data.labels = labels;
+                chartTempInstance.data.datasets[0].data = dadosTemp;
+                chartTempInstance.update();
+            } else {
+                chartTempInstance = new Chart(ctxTemp, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Temperatura corporal (°C)',
+                            data: dadosTemp,
+                            borderColor: '#ea580c', // orange-600
+                            backgroundColor: 'rgba(234, 88, 12, 0.1)',
+                            borderWidth: 3,
+                            tension: 0.3,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: { min: 34, max: 40 } // Janela ideal para visualização de febre/hipotermia
+                        }
+                    }
+                });
+            }
+
+            // 2. Gráfico de Batimentos (BPM)
+            const ctxBpm = document.getElementById('chart-bpm').getContext('2d');
+            if (chartBpmInstance) {
+                chartBpmInstance.data.labels = labels;
+                chartBpmInstance.data.datasets[0].data = dadosBpm;
+                chartBpmInstance.update();
+            } else {
+                chartBpmInstance = new Chart(ctxBpm, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Frequência Cardíaca (BPM)',
+                            data: dadosBpm,
+                            borderColor: '#e11d48', // rose-600
+                            backgroundColor: 'rgba(225, 29, 72, 0.1)',
+                            borderWidth: 3,
+                            tension: 0.3,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: { min: 100, max: 180 } // Margem de segurança ideal para a fisiologia de prematuros
+                        }
+                    }
+                });
+            }
+        }
+
         async function buscarDados() {
             try {
                 const bebeSelecionado = document.getElementById('filtro-bebe').value;
-                let url = 'http://localhost:3000/vitals';
+                // Use API base dinâmica (mesmo host em dev) para evitar hardcode de IP
+                const API_BASE = `${location.protocol}//${location.hostname}:3000`;
+                let url = `${API_BASE}/vitals`;
 
+                // Correção de rota baseada na semântica padrão (?babyId= ou parâmetros de listagem)
                 if (bebeSelecionado !== 'todos') {
-                    url = `http://localhost:3000/vitals/${bebeSelecionado}`;
+                    url = `${API_BASE}/vitals/${bebeSelecionado}`;
                 }
 
                 const response = await fetch(url);
                 const dados = response.ok ? await response.json() : [];
 
                 const tabela = document.getElementById('logs-table');
-                tabela.innerHTML = ''; // Limpa a tabela
+                tabela.innerHTML = ''; 
 
                 if (Array.isArray(dados) && dados.length > 0) {
-                    const ultimo = dados[0]; // Pega o mais recente
+                    const ultimo = dados[0]; 
 
                     document.getElementById('current-temp').innerText = `${ultimo.temperatura}°C`;
                     document.getElementById('current-bpm').innerText = `${ultimo.batimentos} BPM`;
 
                     const statusCard = document.getElementById('status-card');
                     const statusText = document.getElementById('current-status');
+                    const statusIcon = document.getElementById('status-icon');
 
-                    if (ultimo.temperatura > 37.5 || ultimo.batimentos > 160) {
+                    // Regras clínicas de UTI neonatal (BPM entre 120-160 e Temp entre 36.5-37.5)
+                    if (ultimo.temperatura > 37.5 || ultimo.temperatura < 36.5 || ultimo.batimentos > 160 || ultimo.batimentos < 120) {
                         statusText.innerText = "Atenção Necessária";
-                        statusCard.className = "bg-red-50 p-6 rounded-2xl shadow-sm border border-red-200";
+                        statusCard.className = "bg-red-50 p-6 rounded-2xl shadow-sm border border-red-200 transition-all";
+                        statusIcon.className = "bg-red-100 p-3 rounded-xl text-red-600";
+                        statusIcon.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-2xl"></i>`;
                     } else {
                         statusText.innerText = "Sinais Estáveis";
-                        statusCard.className = "bg-green-50 p-6 rounded-2xl shadow-sm border border-green-200";
+                        statusCard.className = "bg-green-50 p-6 rounded-2xl shadow-sm border border-green-200 transition-all";
+                        statusIcon.className = "bg-green-100 p-3 rounded-xl text-green-600";
+                        statusIcon.innerHTML = `<i class="fa-solid fa-circle-check text-2xl"></i>`;
                     }
 
+                    // Preenche a tabela
                     dados.forEach(log => {
                         const data = new Date(log.dataHora).toLocaleString('pt-BR');
                         tabela.innerHTML += `
                             <tr class="hover:bg-slate-50 transition-colors">
                                 <td class="px-6 py-4">${data}</td>
-                                <td class="px-6 py-4 font-medium">${log.babyId}</td>
+                                <td class="px-6 py-4 font-medium text-slate-700">${log.babyId || log.bebeId}</td>
                                 <td class="px-6 py-4">${log.temperatura}°C</td>
                                 <td class="px-6 py-4">${log.batimentos} BPM</td>
                             </tr>
                         `;
                     });
+
+                    // Renderiza e atualiza os gráficos com o histórico carregado
+                    atualizarGraficos(dados);
+
                 } else {
                     document.getElementById('current-temp').innerText = '--°C';
                     document.getElementById('current-bpm').innerText = '-- BPM';
@@ -147,15 +261,14 @@
                 const tabela = document.getElementById('logs-table');
                 tabela.innerHTML = `
                     <tr>
-                        <td class="px-6 py-4 text-red-500" colspan="4">Erro ao buscar dados. Verifique se o backend está rodando.</td>
+                        <td class="px-6 py-4 text-red-500" colspan="4">Erro ao buscar dados. Verifique se o backend está rodando localmente ou altere a URL da requisição.</td>
                     </tr>
                 `;
             }
         }
 
-        // Atualiza automaticamente a cada 5 segundos
+        // Atualiza de forma assíncrona a cada 5 segundos
         setInterval(buscarDados, 5000);
-        // Busca na primeira carga
         buscarDados();
     </script>
 </body>

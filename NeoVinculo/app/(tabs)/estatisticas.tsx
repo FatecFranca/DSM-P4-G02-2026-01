@@ -419,7 +419,6 @@ const styles = StyleSheet.create({
     borderLeftWidth: 3,
     borderLeftColor: COLORS.danger,
   },
-<<<<<<< HEAD
   anomalyText: {
     fontSize: 11,
     color: COLORS.danger,
@@ -433,5 +432,3 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
 });
-=======
->>>>>>> 3af56d4bda344d7985cde9813dcb56cffdfb7cd7

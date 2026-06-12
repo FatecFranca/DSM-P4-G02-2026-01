@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
-const http = require('http');              // 👈 adicionar
-const { Server } = require('socket.io'); // 👈 adicionar
+const http = require('http');              
+const { Server } = require('socket.io'); 
 const conectarDB = require('./config/db');
 const routes = require('./routes/routes');
 const swaggerUi = require('swagger-ui-express');
@@ -9,8 +9,8 @@ const swaggerJsDoc = require('swagger-jsdoc');
 require('dotenv').config();
 
 const app = express();
-const server = http.createServer(app);   // 👈 trocar app.listen por server
-const io = new Server(server, {         // 👈 adicionar
+const server = http.createServer(app);   
+const io = new Server(server, {         
   cors: { origin: '*' }
 });
 
@@ -21,7 +21,7 @@ app.use(cors());
 app.use(express.json());
 
 // Disponibiliza o io para os controllers usarem
-app.set('io', io);                       // 👈 adicionar
+app.set('io', io);                     
 
 // --- SOCKET.IO ---
 io.on('connection', (socket) => {
@@ -58,7 +58,7 @@ app.use(routes);
 
 // --- INICIALIZAÇÃO (server, não app) ---
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {             // 👈 server.listen, não app.listen
+server.listen(PORT, () => {           
   console.log(`🚀 NeoVínculo rodando na porta ${PORT}`);
   console.log(`📄 Documentação disponível em http://localhost:${PORT}/api-docs`);
 });

@@ -42,8 +42,11 @@ export default function PerfilScreen() {
     Alert.alert('Sair', 'Deseja encerrar a sessão?', [
       { text: 'Cancelar', style: 'cancel' },
       {
-        text: 'Sair', style: 'destructive', onPress: () => {
+        text: 'Sair',
+        style: 'destructive',
+        onPress: () => {
           logout();
+          // Navega para fora do grupo (tabs), indo para o index raiz (login)
           router.replace('/');
         },
       },
@@ -99,10 +102,6 @@ export default function PerfilScreen() {
 
       <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
         <Text style={styles.logoutText}>Sair da conta</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.loginBtn} onPress={() => router.replace('/')}> 
-        <Text style={styles.loginText}>Voltar para login</Text>
       </TouchableOpacity>
 
       <View style={{ height: 28 }} />

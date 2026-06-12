@@ -50,6 +50,7 @@ export const useStore = create<AppState>()(
       },
       logout: () => {
         global.__authToken = undefined;
+        AsyncStorage.removeItem('baby-monitor-storage').catch(() => {});
         set({
           token: null, babyId: null, bebe: null,
           ultimaColeta: null, coletasRecentes: [], alertas: [],

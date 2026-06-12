@@ -21,7 +21,7 @@ O **NeoVínculo** é uma solução de IoT desenvolvida para monitorar sinais vit
 ## Estrutura do projeto
 
 ```
-baby-monitor/
+NeoVinculo/
 ├── app/
 │   ├── _layout.tsx          # Layout raiz + setup de push notifications
 │   ├── index.tsx            # Tela de Login
