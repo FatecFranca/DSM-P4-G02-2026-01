@@ -37,7 +37,7 @@ export const VITAL_THRESHOLDS = {
   },
 };
 
-export const API_URL = 'https://dsm-p4-g02-2026-01.onrender.com'; //Render
-export const SOCKET_URL = 'https://dsm-p4-g02-2026-01.onrender.com';
+export const API_URL = 'http://20.43.15.19:3000';
+export const SOCKET_URL = 'http://20.43.15.19:3000';
 
 export const COLETA_INTERVAL_MS = 30000; // 30 segundos (igual ao IoT)
